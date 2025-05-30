@@ -22,5 +22,6 @@ void TestFindIntermediates::testWithSampleData()
     QCOMPARE(result.size(), 2);
     QVERIFY(result.contains("Parent1"));
     QVERIFY(result.contains("Parent2"));
+    //123
 }
 
