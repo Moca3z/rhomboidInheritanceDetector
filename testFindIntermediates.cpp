@@ -23,5 +23,7 @@ void TestFindIntermediates::testWithSampleData()
     QVERIFY(result.contains("Parent1"));
     QVERIFY(result.contains("Parent2"));
     //123
+    //321
+
 }
 
