@@ -5,12 +5,13 @@
 #include <QList>
 #include <QMap>
 #include <QSet>
+#include "class.h"
 
 QList<QString> findIntermediates(
-    const QString& top,
-    const QString& bottom,
-    const QMap<QString, QSet<QString>>& inheritanceMatrix,
-    const QMap<QString, void*>& classes
+    QString top,
+    QString bottom,
+    QMap<QString, QSet<QString>>& inheritanceMatrix,
+    QMap<QString, Class*>& classes
     );
 
 #endif // FINDINTERMEDIATES_H
