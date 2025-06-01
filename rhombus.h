@@ -6,6 +6,7 @@
 #include <QMap>
 #include <QSet>
 #include "class.h"
+#include <QDebug>
 
 struct Rhombus {
     QString bottom;

@@ -8,7 +8,8 @@ class TestDetectRhomboid : public QObject
 {
     Q_OBJECT
 private slots:
-    void testNoRhombus();
+    void testDetectRhomboidInheritance_data();
+    void testDetectRhomboidInheritance();
 
 
 };
