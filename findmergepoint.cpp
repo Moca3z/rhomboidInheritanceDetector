@@ -1,11 +1,11 @@
 #include "findmergepoint.h"
 
 QString findMergePoint(
-    const QString& bottom,
-    const QString& top,
-    const QList<QString>& intermediates,
-    const QMap<QString, QSet<QString>>& inheritanceMatrix,
-    const QMap<QString, Class*>& classes
+    QString& bottom,
+    QString& top,
+    QList<QString>& intermediates,
+    QMap<QString, QSet<QString>>& inheritanceMatrix,
+    QMap<QString, Class*>& classes
     ) {
     Q_UNUSED(bottom);
     Q_UNUSED(top);
