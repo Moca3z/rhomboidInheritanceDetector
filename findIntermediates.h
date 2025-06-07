@@ -6,8 +6,9 @@
 #include <QMap>
 #include <QSet>
 #include "class.h"
+#include <QMultiMap>
 
-QList<QString> findIntermediates(
+QMultiMap<int, QString> findIntermediates(
     QString top,
     QString bottom,
     QMap<QString, QSet<QString>>& inheritanceMatrix,

@@ -1,6 +1,6 @@
 #include "findintermediates.h"
 
-QList<QString> findIntermediates(
+QMultiMap<int, QString> findIntermediates(
     QString top,
     QString bottom,
     QMap<QString, QSet<QString>>& inheritanceMatrix,
@@ -12,5 +12,8 @@ QList<QString> findIntermediates(
     Q_UNUSED(classes);
 
     // Заглушка - возвращаем пустой список
-    return {"ABC"};
+    QMultiMap<int, QString> test;
+    test.insert(1, "Z");
+
+    return test;
 }

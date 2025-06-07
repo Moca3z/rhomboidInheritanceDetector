@@ -5,6 +5,7 @@
 // Алиасы для работы QFetch
 using InheritanceMatrix = QMap<QString, QSet<QString>>;
 using ClassMap = QMap<QString, Class*>;
+using IntermediatesMap = QMultiMap<int, QString>;
 
 void TestFindIntermediates::testFindIntermediates_data()
 {
@@ -12,7 +13,7 @@ void TestFindIntermediates::testFindIntermediates_data()
     QTest::addColumn<ClassMap>("classes");
     QTest::addColumn<QString>("top");
     QTest::addColumn<QString>("bottom");
-    QTest::addColumn<QList<QString>>("expected");
+    QTest::addColumn<IntermediatesMap>("expected");
 
     // Тест 1: 2 класса на одном уровне между bottom и top
     {
@@ -44,36 +45,18 @@ void TestFindIntermediates::testFindIntermediates_data()
         classes.insert("C", c);
         classes.insert("D", d);
 
-        QTest::newRow("TwoClassesOnSameLevel") << inheritanceMatrix << classes << "A" << "D" << QList<QString>{"B", "C"};
+        IntermediatesMap expected;
+        expected.insert(1, "B");
+        expected.insert(1, "C");
+        QTest::newRow("TwoClassesOnSameLevel") << inheritanceMatrix << classes << "A" << "D" << expected;
     }
 
     // Тест 2: отсутствие классов между bottom и top
     {
         InheritanceMatrix inheritanceMatrix = {
-            {"D", {"A"}},
-            {"A", {}}
-        };
-
-        ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "A";
-
-        classes.insert("A", a);
-        classes.insert("D", d);
-
-        QTest::newRow("NoClassesBetween") << inheritanceMatrix << classes << "A" << "D" << QList<QString>{};
-    }
-
-    // Тест 3: один класс между bottom и top
-    {
-        InheritanceMatrix inheritanceMatrix = {
-            {"D", {"B", "A"}},
-            {"B", {"A"}},
-            {"A", {}}
+            {"D", {"A", "B"}},
+            {"A", {}},
+            {"B", {}}
         };
 
         ClassMap classes;
@@ -82,32 +65,85 @@ void TestFindIntermediates::testFindIntermediates_data()
 
         Class* b = new Class();
         b->className = "B";
+
+        Class* d = new Class();
+        d->className = "D";
+        d->directAncestors << "A" << "B";
+
+        classes.insert("A", a);
+        classes.insert("D", d);
+        classes.insert("B", b);
+
+        QTest::newRow("NoClassesBetween") << inheritanceMatrix << classes << "A" << "D" << IntermediatesMap();
+    }
+
+    // Тест 3: один класс между bottom и top
+    {
+        InheritanceMatrix inheritanceMatrix = {
+            {"D", {"C", "B", "E", "A", "F"}},
+            {"B", {"A", "F"}},
+            {"A", {}},
+            {"C", {}},
+            {"E", {}},
+            {"F", {}}
+        };
+
+        ClassMap classes;
+        Class* f = new Class();
+        f->className = "F";
+
+        Class* a = new Class();
+        a->className = "A";
+        a->directAncestors << "F";
+
+        Class* c = new Class();
+        c->className = "C";
+
+        Class* e = new Class();
+        e->className = "E";
+
+        Class* b = new Class();
+        b->className = "B";
         b->directAncestors << "A";
 
         Class* d = new Class();
         d->className = "D";
-        d->directAncestors << "B";
+        d->directAncestors << "B" << "C" << "E";
 
         classes.insert("A", a);
         classes.insert("B", b);
         classes.insert("D", d);
+        classes.insert("C", c);
+        classes.insert("E", e);
+        classes.insert("F", f);
 
-        QTest::newRow("OneClassBetween") << inheritanceMatrix << classes << "A" << "D" << QList<QString>{"B"};
+        IntermediatesMap expected;
+        expected.insert(1, "B");
+        QTest::newRow("OneClassBetween") << inheritanceMatrix << classes << "A" << "D" << expected;
     }
 
     // Тест 4: прямая ветвь наследования между bottom и top
     {
         InheritanceMatrix inheritanceMatrix = {
-            {"D", {"E", "B", "C", "A"}},
-            {"E", {"B", "C", "A"}},
+            {"D", {"E", "B", "C", "A", "F", "H", "G"}},
+            {"E", {"B", "C", "A", "F", "H", "G"}},
             {"B", {"C", "A"}},
             {"C", {"A"}},
-            {"A", {}}
+            {"A", {}},
+            {"F", {"H"}},
+            {"H", {}},
+            {"G", {}}
         };
 
         ClassMap classes;
         Class* a = new Class();
         a->className = "A";
+
+        Class* h = new Class();
+        h->className = "H";
+
+        Class* g = new Class();
+        g->className = "G";
 
         Class* c = new Class();
         c->className = "C";
@@ -119,19 +155,30 @@ void TestFindIntermediates::testFindIntermediates_data()
 
         Class* e = new Class();
         e->className = "E";
-        e->directAncestors << "B";
+        e->directAncestors << "B" << "F" << "G";
 
         Class* d = new Class();
         d->className = "D";
         d->directAncestors << "E";
+
+        Class* f = new Class();
+        f->className = "F";
+        f->directAncestors << "H";
 
         classes.insert("A", a);
         classes.insert("B", b);
         classes.insert("C", c);
         classes.insert("D", d);
         classes.insert("E", e);
+        classes.insert("F", f);
+        classes.insert("H", h);
+        classes.insert("G", g);
 
-        QTest::newRow("StraightInheritanceChain") << inheritanceMatrix << classes << "A" << "D" << QList<QString>{"E", "B", "C"};
+        IntermediatesMap expected;
+        expected.insert(1, "E");
+        expected.insert(2, "B");
+        expected.insert(3, "C");
+        QTest::newRow("StraightInheritanceChain") << inheritanceMatrix << classes << "A" << "D" << expected;
     }
 
     // Тест 5: не связанные с top предки bottom
@@ -169,7 +216,7 @@ void TestFindIntermediates::testFindIntermediates_data()
         classes.insert("D", d);
         classes.insert("E", e);
 
-        QTest::newRow("BottomAncestorsNotConnectedToTop") << inheritanceMatrix << classes << "A" << "D" << QList<QString>{};
+        QTest::newRow("BottomAncestorsNotConnectedToTop") << inheritanceMatrix << classes << "A" << "D" << IntermediatesMap();
     }
 
     // Тест 6: полная связь bottom с каждым классом
@@ -202,22 +249,33 @@ void TestFindIntermediates::testFindIntermediates_data()
         classes.insert("C", c);
         classes.insert("D", d);
 
-        QTest::newRow("FullConnectionToBottom") << inheritanceMatrix << classes << "A" << "D" << QList<QString>{"B", "C"};
+        IntermediatesMap expected;
+        expected.insert(1, "B");
+        expected.insert(1, "C");
+        QTest::newRow("FullConnectionToBottom") << inheritanceMatrix << classes << "A" << "D" << expected;
     }
 
     // Тест 7: прямой предок bottom - точка слияния между bottom и top
     {
         InheritanceMatrix inheritanceMatrix = {
-            {"I", {"H", "G", "E", "A"}},
-            {"H", {"G", "E", "A"}},
+            {"I", {"H", "G", "E", "A", "B", "C"}},
+            {"H", {"G", "E", "A", "B", "C"}},
             {"G", {"A"}},
             {"E", {"A"}},
-            {"A", {}}
+            {"A", {}},
+            {"B", {}},
+            {"C", {}}
         };
 
         ClassMap classes;
         Class* a = new Class();
         a->className = "A";
+
+        Class* b = new Class();
+        b->className = "B";
+
+        Class* c = new Class();
+        c->className = "C";
 
         Class* g = new Class();
         g->className = "G";
@@ -229,7 +287,7 @@ void TestFindIntermediates::testFindIntermediates_data()
 
         Class* h = new Class();
         h->className = "H";
-        h->directAncestors << "G" << "E";
+        h->directAncestors << "G" << "E" << "B" << "C";
 
         Class* i = new Class();
         i->className = "I";
@@ -240,23 +298,42 @@ void TestFindIntermediates::testFindIntermediates_data()
         classes.insert("E", e);
         classes.insert("H", h);
         classes.insert("I", i);
+        classes.insert("B", h);
+        classes.insert("C", i);
 
-        QTest::newRow("DirectAncestorMergePoint") << inheritanceMatrix << classes << "A" << "I" << QList<QString>{"H", "G", "E"};
+        IntermediatesMap expected;
+        expected.insert(1, "H");
+        expected.insert(2, "G");
+        expected.insert(2, "E");
+        QTest::newRow("DirectAncestorMergePoint") << inheritanceMatrix << classes << "A" << "I" << expected;
     }
 
     // Тест 8: прямой потомок - точка слияния между bottom и top
     {
         InheritanceMatrix inheritanceMatrix = {
-            {"I", {"G", "E", "B", "A"}},
-            {"E", {"B", "A"}},
-            {"G", {"B", "A"}},
-            {"B", {"A"}},
-            {"A", {}}
+            {"I", {"G", "E", "B", "A", "C", "F", "X"}},
+            {"E", {"B", "A", "F", "X"}},
+            {"G", {"B", "A", "C", "X"}},
+            {"B", {"A", "X"}},
+            {"A", {"X"}},
+            {"C", {}},
+            {"F", {}},
+            {"X", {}}
         };
 
         ClassMap classes;
         Class* a = new Class();
         a->className = "A";
+        a->directAncestors << "X";
+
+        Class* c = new Class();
+        c->className = "C";
+
+        Class* f = new Class();
+        f->className = "F";
+
+        Class* x = new Class();
+        x->className = "X";
 
         Class* b = new Class();
         b->className = "B";
@@ -264,11 +341,11 @@ void TestFindIntermediates::testFindIntermediates_data()
 
         Class* g = new Class();
         g->className = "G";
-        g->directAncestors << "B";
+        g->directAncestors << "B" << "C";
 
         Class* e = new Class();
         e->className = "E";
-        e->directAncestors << "B";
+        e->directAncestors << "B" << "F";
 
         Class* i = new Class();
         i->className = "I";
@@ -279,24 +356,47 @@ void TestFindIntermediates::testFindIntermediates_data()
         classes.insert("E", e);
         classes.insert("B", b);
         classes.insert("I", i);
+        classes.insert("C", c);
+        classes.insert("F", f);
+        classes.insert("X", x);
 
-        QTest::newRow("DirectDescendantMergePoint") << inheritanceMatrix << classes << "A" << "I" << QList<QString>{"G", "E", "B"};
+        IntermediatesMap expected;
+        expected.insert(1, "G");
+        expected.insert(1, "E");
+        expected.insert(2, "B");
+        QTest::newRow("DirectDescendantMergePoint") << inheritanceMatrix << classes << "A" << "I" << expected;
     }
 
     // Тест 9: два ромба, связанные друг с другом, между bottom и top
     {
         InheritanceMatrix inheritanceMatrix = {
-            {"F", {"E", "D", "B", "C", "A"}},
-            {"E", {"B", "A"}},
-            {"D", {"B", "C", "A"}},
+            {"F", {"E", "D", "B", "C", "A", "I", "J", "G", "H"}},
+            {"E", {"B", "A", "G"}},
+            {"D", {"B", "C", "A", "H"}},
             {"B", {"A"}},
             {"C", {"A"}},
-            {"A", {}}
+            {"A", {}},
+            {"G", {}},
+            {"I", {}},
+            {"H", {}},
+            {"J", {}}
         };
 
         ClassMap classes;
         Class* a = new Class();
         a->className = "A";
+
+        Class* i = new Class();
+        i->className = "I";
+
+        Class* j = new Class();
+        j->className = "J";
+
+        Class* g = new Class();
+        g->className = "G";
+
+        Class* h = new Class();
+        h->className = "H";
 
         Class* b = new Class();
         b->className = "B";
@@ -308,15 +408,15 @@ void TestFindIntermediates::testFindIntermediates_data()
 
         Class* d = new Class();
         d->className = "D";
-        d->directAncestors << "B" << "C";
+        d->directAncestors << "B" << "C" << "H";
 
         Class* e = new Class();
         e->className = "E";
-        e->directAncestors << "B";
+        e->directAncestors << "B" << "G";
 
         Class* f = new Class();
         f->className = "F";
-        f->directAncestors << "E" << "D";
+        f->directAncestors << "E" << "D" << "I" << "J";
 
         classes.insert("A", a);
         classes.insert("B", b);
@@ -324,32 +424,67 @@ void TestFindIntermediates::testFindIntermediates_data()
         classes.insert("D", d);
         classes.insert("E", e);
         classes.insert("F", f);
+        classes.insert("I", i);
+        classes.insert("G", g);
+        classes.insert("H", h);
+        classes.insert("J", j);
 
-        QTest::newRow("TwoDiamondsConnected") << inheritanceMatrix << classes << "A" << "F" << QList<QString>{"E", "D", "B", "C"};
+        IntermediatesMap expected;
+        expected.insert(1, "E");
+        expected.insert(1, "D");
+        expected.insert(2, "B");
+        expected.insert(2, "C");
+        QTest::newRow("TwoDiamondsConnected") << inheritanceMatrix << classes << "A" << "F" << expected;
     }
 
     // Тест 10: длинная цепочка наследований между bottom и top
     {
         InheritanceMatrix inheritanceMatrix = {
-            {"R", {"P", "O", "K", "I", "J", "H", "F", "G", "E", "C", "D", "B", "A"}},
-            {"P", {"K", "I", "J", "H", "F", "G", "E", "C", "D", "B", "A"}},
-            {"O", {"K", "I", "J", "H", "F", "G", "E", "C", "D", "B", "A"}},
-            {"K", {"I", "J", "H", "F", "G", "E", "C", "D", "B", "A"}},
-            {"I", {"H", "F", "G", "E", "C", "D", "B", "A"}},
-            {"J", {"H", "F", "G", "E", "C", "D", "B", "A"}},
-            {"H", {"F", "G", "E", "C", "D", "B", "A"}},
-            {"F", {"E", "C", "D", "B", "A"}},
-            {"G", {"E", "C", "D", "B", "A"}},
-            {"E", {"C", "D", "B", "A"}},
-            {"C", {"B", "A"}},
-            {"D", {"B", "A"}},
-            {"B", {"A"}},
-            {"A", {}}
+            {"R", {"P", "O", "K", "I", "J", "H", "F", "G", "E", "C", "D", "B", "A", "M", "L", "X", "Q", "Y", "Z"}},
+            {"P", {"K", "I", "J", "H", "F", "G", "E", "C", "D", "B", "A", "X", "Q", "Y", "Z"}},
+            {"O", {"K", "I", "J", "H", "F", "G", "E", "C", "D", "B", "A", "X", "Q", "Y", "Z"}},
+            {"K", {"I", "J", "H", "F", "G", "E", "C", "D", "B", "A", "X", "Q", "Y", "Z"}},
+            {"I", {"H", "F", "G", "E", "C", "D", "B", "A", "X", "Q", "Y", "Z"}},
+            {"J", {"H", "F", "G", "E", "C", "D", "B", "A", "X", "Q", "Y", "Z"}},
+            {"H", {"F", "G", "E", "C", "D", "B", "A", "X", "Q", "Y", "Z"}},
+            {"F", {"E", "C", "D", "B", "A", "Q", "Y", "Z"}},
+            {"G", {"E", "C", "D", "B", "A", "Q", "Y", "Z"}},
+            {"E", {"C", "D", "B", "A", "Q", "Y", "Z"}},
+            {"C", {"B", "A", "Z"}},
+            {"D", {"B", "A", "Y", "Z"}},
+            {"B", {"A", "Z"}},
+            {"A", {"Z"}},
+            {"M", {}},
+            {"L", {}},
+            {"X", {}},
+            {"Q", {}},
+            {"Y", {}},
+            {"Z", {}}
         };
 
         ClassMap classes;
+
+        Class* m = new Class();
+        m->className = "M";
+
+        Class* l = new Class();
+        l->className = "L";
+
+        Class* x = new Class();
+        x->className = "X";
+
+        Class* q = new Class();
+        q->className = "Q";
+
+        Class* y = new Class();
+        y->className = "Y";
+
+        Class* z = new Class();
+        z->className = "Z";
+
         Class* a = new Class();
         a->className = "A";
+        a->directAncestors << "Y";
 
         Class* b = new Class();
         b->className = "B";
@@ -361,11 +496,11 @@ void TestFindIntermediates::testFindIntermediates_data()
 
         Class* d = new Class();
         d->className = "D";
-        d->directAncestors << "B";
+        d->directAncestors << "B" << "Y";
 
         Class* e = new Class();
         e->className = "E";
-        e->directAncestors << "C" << "D";
+        e->directAncestors << "C" << "D" << "Q";
 
         Class* f = new Class();
         f->className = "F";
@@ -377,7 +512,7 @@ void TestFindIntermediates::testFindIntermediates_data()
 
         Class* h = new Class();
         h->className = "H";
-        h->directAncestors << "F" << "G";
+        h->directAncestors << "F" << "G" << "X";
 
         Class* i = new Class();
         i->className = "I";
@@ -401,7 +536,7 @@ void TestFindIntermediates::testFindIntermediates_data()
 
         Class* r = new Class();
         r->className = "R";
-        r->directAncestors << "P" << "O";
+        r->directAncestors << "P" << "O" << "M" << "L";
 
         classes.insert("A", a);
         classes.insert("B", b);
@@ -417,52 +552,101 @@ void TestFindIntermediates::testFindIntermediates_data()
         classes.insert("P", p);
         classes.insert("O", o);
         classes.insert("R", r);
+        classes.insert("M", m);
+        classes.insert("L", l);
+        classes.insert("X", x);
+        classes.insert("Q", q);
+        classes.insert("Y", y);
+        classes.insert("Z", z);
 
-        QTest::newRow("LongInheritanceChain") << inheritanceMatrix << classes << "A" << "R" << QList<QString>{"P", "O", "K", "I", "J", "H", "F", "G", "E", "C", "D", "B"};
+        IntermediatesMap expected;
+        expected.insert(1, "P");
+        expected.insert(1, "O");
+        expected.insert(2, "K");
+        expected.insert(3, "I");
+        expected.insert(3, "J");
+        expected.insert(4, "H");
+        expected.insert(5, "F");
+        expected.insert(5, "G");
+        expected.insert(6, "E");
+        expected.insert(7, "C");
+        expected.insert(7, "D");
+        expected.insert(8, "B");
+        QTest::newRow("LongInheritanceChain") << inheritanceMatrix << classes << "A" << "R" << expected;
     }
 
     // Тест 11: ромб из трех классов
     {
         InheritanceMatrix inheritanceMatrix = {
-            {"D", {"A", "B"}},
-            {"B", {"A"}},
-            {"A", {}}
+            {"D", {"A", "B", "C", "E"}},
+            {"B", {"A", "C"}},
+            {"A", {}},
+            {"C", {}},
+            {"E", {}}
         };
 
         ClassMap classes;
+
+        Class* c = new Class();
+        c->className = "C";
+
+        Class* e = new Class();
+        e->className = "E";
+
         Class* a = new Class();
         a->className = "A";
 
         Class* b = new Class();
         b->className = "B";
-        b->directAncestors << "A";
+        b->directAncestors << "A" << "C";
 
         Class* d = new Class();
         d->className = "D";
-        d->directAncestors << "A" << "B";
+        d->directAncestors << "A" << "B" << "E";
 
         classes.insert("A", a);
         classes.insert("B", b);
         classes.insert("D", d);
+        classes.insert("C", c);
+        classes.insert("E", e);
 
-        QTest::newRow("ThreeClassRhombus") << inheritanceMatrix << classes << "A" << "D" << QList<QString>{"B"};
+        IntermediatesMap expected;
+        expected.insert(1, "B");
+        QTest::newRow("ThreeClassRhombus") << inheritanceMatrix << classes << "A" << "D" << expected;
     }
 
-    // Тест 12: разная глубина наследования с обхнодными путями нескольких точек слияния
+    // Тест 12: разная глубина наследования с обходными путями нескольких точек слияния
     {
         InheritanceMatrix inheritanceMatrix = {
-            {"E", {"A", "G", "C", "F", "H", "D", "B", "X"}},
-            {"G", {"C", "F", "H", "D", "B", "X", "A"}},
+            {"E", {"A", "G", "C", "F", "H", "D", "B", "X", "N", "O", "L", "M"}},
+            {"G", {"C", "F", "H", "D", "B", "X", "A", "L", "M"}},
             {"C", {"H", "X", "A"}},
-            {"F", {"D", "B", "X", "A"}},
+            {"F", {"D", "B", "X", "A", "L", "M"}},
             {"H", {"X", "A"}},
             {"D", {"B", "X", "A"}},
             {"B", {"X", "A"}},
             {"X", {"A"}},
-            {"A", {}}
+            {"A", {}},
+            {"N", {}},
+            {"O", {}},
+            {"L", {}},
+            {"M", {}}
         };
 
         ClassMap classes;
+
+        Class* n = new Class();
+        n->className = "N";
+
+        Class* o = new Class();
+        o->className = "O";
+
+        Class* l = new Class();
+        l->className = "L";
+
+        Class* m = new Class();
+        m->className = "M";
+
         Class* a = new Class();
         a->className = "A";
 
@@ -480,7 +664,7 @@ void TestFindIntermediates::testFindIntermediates_data()
 
         Class* f = new Class();
         f->className = "F";
-        f->directAncestors << "D";
+        f->directAncestors << "D" << "L" << "M";
 
         Class* c = new Class();
         c->className = "C";
@@ -496,7 +680,7 @@ void TestFindIntermediates::testFindIntermediates_data()
 
         Class* e = new Class();
         e->className = "E";
-        e->directAncestors << "A" << "G";
+        e->directAncestors << "A" << "G" << "N" << "O";
 
         classes.insert("A", a);
         classes.insert("B", b);
@@ -507,8 +691,20 @@ void TestFindIntermediates::testFindIntermediates_data()
         classes.insert("G", g);
         classes.insert("X", x);
         classes.insert("E", e);
+        classes.insert("N", c);
+        classes.insert("O", g);
+        classes.insert("L", x);
+        classes.insert("M", e);
 
-        QTest::newRow("DifferentDepthsWithBypass") << inheritanceMatrix << classes << "A" << "E" << QList<QString>{"G", "C", "F", "H", "D", "B", "X"};
+        IntermediatesMap expected;
+        expected.insert(1, "G");
+        expected.insert(2, "C");
+        expected.insert(2, "F");
+        expected.insert(3, "H");
+        expected.insert(3, "D");
+        expected.insert(4, "B");
+        expected.insert(4, "X");
+        QTest::newRow("DifferentDepthsWithBypass") << inheritanceMatrix << classes << "A" << "E" << expected;
     }
 
     // Тест 13: несколько ромбов с общим bottom
@@ -563,7 +759,10 @@ void TestFindIntermediates::testFindIntermediates_data()
         classes.insert("G", g);
         classes.insert("E", e);
 
-        QTest::newRow("MultipleRhombusesCommonBottom") << inheritanceMatrix << classes << "A" << "E" << QList<QString>{"B", "C"};
+        IntermediatesMap expected;
+        expected.insert(1, "B");
+        expected.insert(1, "C");
+        QTest::newRow("MultipleRhombusesCommonBottom") << inheritanceMatrix << classes << "A" << "E" << expected;
     }
 
     // Тест 14: несколько ромбов с общим bottom и top в одном из них
@@ -626,7 +825,10 @@ void TestFindIntermediates::testFindIntermediates_data()
         classes.insert("E", e);
         classes.insert("X", x);
 
-        QTest::newRow("MultipleRhombusesCommonBottomAndTop") << inheritanceMatrix << classes << "A" << "E" << QList<QString>{"B", "C"};
+        IntermediatesMap expected;
+        expected.insert(1, "B");
+        expected.insert(1, "C");
+        QTest::newRow("MultipleRhombusesCommonBottomAndTop") << inheritanceMatrix << classes << "A" << "E" << expected;
     }
 
     // Тест 15: несколько ромбов с общим bottom и top в точке их объединения
@@ -689,7 +891,15 @@ void TestFindIntermediates::testFindIntermediates_data()
         classes.insert("E", e);
         classes.insert("X", x);
 
-        QTest::newRow("MultipleRhombusesUnionPoint") << inheritanceMatrix << classes << "X" << "E" << QList<QString>{"D", "B", "C", "G", "F", "A", "H"};
+        IntermediatesMap expected;
+        expected.insert(1, "D");
+        expected.insert(1, "B");
+        expected.insert(1, "C");
+        expected.insert(1, "G");
+        expected.insert(2, "F");
+        expected.insert(2, "A");
+        expected.insert(2, "H");
+        QTest::newRow("MultipleRhombusesUnionPoint") << inheritanceMatrix << classes << "X" << "E" << expected;
     }
 
     // Тест 16: не все ромбы объединяются в одной точке
@@ -768,92 +978,13 @@ void TestFindIntermediates::testFindIntermediates_data()
         classes.insert("J", j);
         classes.insert("K", k);
 
-        QTest::newRow("NotAllRhombusesUnite") << inheritanceMatrix << classes << "X" << "E" << QList<QString>{"D", "B", "C", "F", "A"};
-    }
-
-    // Тест 17: цепочка наследования с разветвлением одного из ромбов
-    {
-        InheritanceMatrix inheritanceMatrix = {
-            {"R", {"S", "T", "H", "K", "J", "G", "F", "B", "D", "A", "X", "Y"}},
-            {"S", {"H", "K", "J", "G", "F", "B", "D", "A", "X", "Y"}},
-            {"T", {"H", "K", "J", "G", "F", "B", "D", "A", "X", "Y"}},
-            {"H", {"K", "J", "G", "F", "B", "D", "A", "X", "Y"}},
-            {"K", {"J", "G", "F", "B", "D", "A", "X", "Y"}},
-            {"J", {"G", "F", "B", "D", "A", "X", "Y"}},
-            {"G", {"B", "D", "X", "Y"}},
-            {"F", {"D", "A", "X", "Y"}},
-            {"D", {"X", "Y"}},
-            {"X", {"Y"}},
-            {"B", {}},
-            {"A", {}},
-            {"Y", {}}
-        };
-
-        ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* b = new Class();
-        b->className = "B";
-
-        Class* y = new Class();
-        y->className = "Y";
-
-        Class* x = new Class();
-        x->className = "X";
-        x->directAncestors << "Y";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "X";
-
-        Class* g = new Class();
-        g->className = "G";
-        g->directAncestors << "B" << "D";
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors << "D" << "A";
-
-        Class* j = new Class();
-        j->className = "J";
-        j->directAncestors << "G" << "F";
-
-        Class* k = new Class();
-        k->className = "K";
-        k->directAncestors << "J";
-
-        Class* h = new Class();
-        h->className = "H";
-        h->directAncestors << "K";
-
-        Class* s = new Class();
-        s->className = "S";
-        s->directAncestors << "H";
-
-        Class* t = new Class();
-        t->className = "T";
-        t->directAncestors << "H";
-
-        Class* r = new Class();
-        r->className = "R";
-        r->directAncestors << "S" << "T";
-
-        classes.insert("Y", y);
-        classes.insert("X", x);
-        classes.insert("B", b);
-        classes.insert("D", d);
-        classes.insert("A", a);
-        classes.insert("G", g);
-        classes.insert("F", f);
-        classes.insert("J", j);
-        classes.insert("K", k);
-        classes.insert("H", h);
-        classes.insert("S", s);
-        classes.insert("T", t);
-        classes.insert("R", r);
-
-        QTest::newRow("ChainWithRhombusBranching") << inheritanceMatrix << classes << "A" << "R" << QList<QString>{"S", "T", "H", "K", "J", "G", "F", "D"};
+        IntermediatesMap expected;
+        expected.insert(1, "D");
+        expected.insert(1, "B");
+        expected.insert(1, "C");
+        expected.insert(2, "F");
+        expected.insert(2, "A");
+        QTest::newRow("NotAllRhombusesUnite") << inheritanceMatrix << classes << "X" << "E" << expected;
     }
 }
 
@@ -863,9 +994,9 @@ void TestFindIntermediates::testFindIntermediates()
     QFETCH(ClassMap, classes);
     QFETCH(QString, top);
     QFETCH(QString, bottom);
-    QFETCH(QList<QString>, expected);
+    QFETCH(IntermediatesMap, expected);
 
-    QList<QString> result = findIntermediates(top, bottom, inheritanceMatrix, classes);
+    IntermediatesMap result = findIntermediates(top, bottom, inheritanceMatrix, classes);
     QCOMPARE(result, expected);
 
     qDeleteAll(classes);
