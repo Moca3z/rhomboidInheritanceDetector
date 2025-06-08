@@ -12,10 +12,12 @@ SOURCES += \
         findIntermediates.cpp \
         findmergepoint.cpp \
         main.cpp \
+        rhombus.cpp \
         testFindIntermediates.cpp \
         testcollectoverriddenmethods.cpp \
         testdetectrhomboidinheritance.cpp \
-        testfindmergepoint.cpp
+        testfindmergepoint.cpp \
+        testparseparameters.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -32,4 +34,5 @@ HEADERS += \
     testFindIntermediates.h \
     testcollectoverriddenmethods.h \
     testdetectrhomboidinheritance.h \
-    testfindmergepoint.h
+    testfindmergepoint.h \
+    testparseparameters.h

@@ -8,7 +8,9 @@ QSet<Rhombus> detectRhomboidInheritance(const QMap<QString, Class*>& classes) {
     Rhombus fakeRhombus;
     fakeRhombus.bottom = "FakeBottom";
     fakeRhombus.top = "FakeTop";
-    fakeRhombus.intermediates = {"FakeIntermediate"};
+    QMultiMap<int, QString> temp;
+    temp.insert(1, "FakeIntermediate");
+    fakeRhombus.intermediates = temp;
 
     // Создаем некорректный метод
     Method* fakeMethod = new Method();

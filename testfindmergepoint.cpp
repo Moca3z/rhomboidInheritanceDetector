@@ -5,13 +5,13 @@
 // Алиасы для работы QFetch
 using InheritanceMatrix = QMap<QString, QSet<QString>>;
 using ClassMap = QMap<QString, Class*>;
-
+using IntermediatesMap = QMultiMap<int, QString>;
 
 void TestFindMergePoint::testFindMergePoint_data()
 {
     QTest::addColumn<QString>("bottom");
     QTest::addColumn<QString>("top");
-    QTest::addColumn<QList<QString>>("intermediates");
+    QTest::addColumn<IntermediatesMap>("intermediates");
     QTest::addColumn<InheritanceMatrix>("inheritanceMatrix");
     QTest::addColumn<ClassMap>("classes");
     QTest::addColumn<QString>("expected");
@@ -24,29 +24,15 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"C", {"A"}},
             {"A", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-
-        QTest::newRow("TwoClassesSameLevel") << "D" << "A" << QList<QString>{"B", "C"} << inheritanceMatrix << classes << "Null";
+        classes.insert("A", new Class("A"));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("D", new Class("D", {"B", "C"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "C");
+        QTest::newRow("TwoClassesSameLevel") << "D" << "A" << intermediates << inheritanceMatrix << classes << "Null";
     }
 
     // Тест 2: ромб из трех классов
@@ -56,24 +42,13 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"B", {"A"}},
             {"A", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "B" << "A";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-
-        QTest::newRow("ThreeClassDiamond") << "C" << "A" << QList<QString>{"B"} << inheritanceMatrix << classes << "Null";
+        classes.insert("A", new Class("A"));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"B", "A"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        QTest::newRow("ThreeClassDiamond") << "C" << "A" << intermediates << inheritanceMatrix << classes << "Null";
     }
 
     // Тест 3: полная связь bottom с каждым классом
@@ -84,29 +59,15 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"D", {"A"}},
             {"A", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "B" << "A" << "D";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-
-        QTest::newRow("FullConnectionToBottom") << "C" << "A" << QList<QString>{"B", "D"} << inheritanceMatrix << classes << "Null";
+        classes.insert("A", new Class("A"));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("D", new Class("D", {"A"}));
+        classes.insert("C", new Class("C", {"B", "A", "D"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "D");
+        QTest::newRow("FullConnectionToBottom") << "C" << "A" << intermediates << inheritanceMatrix << classes << "Null";
     }
 
     // Тест 4: дополнительное наследование для одного из промежуточных классов
@@ -117,29 +78,15 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"C", {"B", "A"}},
             {"A", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "B" << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-
-        QTest::newRow("AdditionalInheritanceIntermediate") << "D" << "A" << QList<QString>{"B", "C"} << inheritanceMatrix << classes << "Null";
+        classes.insert("A", new Class("A"));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"B", "A"}));
+        classes.insert("D", new Class("D", {"B", "C"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "C");
+        QTest::newRow("AdditionalInheritanceIntermediate") << "D" << "A" << intermediates << inheritanceMatrix << classes << "Null";
     }
 
     // Тест 5: точка слияния - прямой предок bottom
@@ -151,34 +98,17 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"C", {"A"}},
             {"A", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "D";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-
-        QTest::newRow("MergePointDirectAncestorBottom") << "E" << "A" << QList<QString>{"D", "B", "C"} << inheritanceMatrix << classes << "D";
+        classes.insert("A", new Class("A"));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("D", new Class("D", {"B", "C"}));
+        classes.insert("E", new Class("E", {"D"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "D");
+        intermediates.insert(2, "B");
+        intermediates.insert(2, "C");
+        QTest::newRow("MergePointDirectAncestorBottom") << "E" << "A" << intermediates << inheritanceMatrix << classes << "D";
     }
 
     // Тест 6: точка слияния - единственный потомок top
@@ -190,34 +120,17 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"A", {"X"}},
             {"X", {}}
         };
-
         ClassMap classes;
-        Class* x = new Class();
-        x->className = "X";
-
-        Class* a = new Class();
-        a->className = "A";
-        a->directAncestors << "X";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("X", x);
-
-        QTest::newRow("MergePointDirectDescendantTop") << "D" << "X" << QList<QString>{"B", "C", "A"} << inheritanceMatrix << classes << "A";
+        classes.insert("X", new Class("X"));
+        classes.insert("A", new Class("A", {"X"}));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("D", new Class("D", {"B", "C"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "C");
+        intermediates.insert(2, "A");
+        QTest::newRow("MergePointDirectDescendantTop") << "D" << "X" << intermediates << inheritanceMatrix << classes << "A";
     }
 
     // Тест 7: точка слияния - единственный потомок top с множеством промежуточных классов
@@ -231,44 +144,21 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"A", {"X"}},
             {"X", {}}
         };
-
         ClassMap classes;
-        Class* x = new Class();
-        x->className = "X";
-
-        Class* a = new Class();
-        a->className = "A";
-        a->directAncestors << "X";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "A";
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C" << "E" << "F";
-
-        classes.insert("X", x);
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("E", e);
-        classes.insert("F", f);
-        classes.insert("D", d);
-
-        QTest::newRow("MergePointDirectDescendantTopMultipleIntermediates") << "D" << "X" << QList<QString>{"B", "C", "E", "F", "A"} << inheritanceMatrix << classes << "A";
+        classes.insert("X", new Class("X"));
+        classes.insert("A", new Class("A", {"X"}));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("E", new Class("E", {"A"}));
+        classes.insert("F", new Class("F", {"A"}));
+        classes.insert("D", new Class("D", {"B", "C", "E", "F"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "C");
+        intermediates.insert(1, "E");
+        intermediates.insert(1, "F");
+        intermediates.insert(2, "A");
+        QTest::newRow("MergePointDirectDescendantTopMultipleIntermediates") << "D" << "X" << intermediates << inheritanceMatrix << classes << "A";
     }
 
     // Тест 8: обходной путь через потенциальную точку слияния в виде прямого потомка top
@@ -280,34 +170,17 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"A", {"X"}},
             {"X", {}}
         };
-
         ClassMap classes;
-        Class* x = new Class();
-        x->className = "X";
-
-        Class* a = new Class();
-        a->className = "A";
-        a->directAncestors << "X";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C" << "X";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("X", x);
-
-        QTest::newRow("BypassPotentialMergePointDirectDescendantTop") << "D" << "X" << QList<QString>{"B", "C", "A"} << inheritanceMatrix << classes << "Null";
+        classes.insert("X", new Class("X"));
+        classes.insert("A", new Class("A", {"X"}));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("D", new Class("D", {"B", "C", "X"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "C");
+        intermediates.insert(2, "A");
+        QTest::newRow("BypassPotentialMergePointDirectDescendantTop") << "D" << "X" << intermediates << inheritanceMatrix << classes << "Null";
     }
 
     // Тест 9: обходной путь через потенциальную точку слияния для прямого предка bottom
@@ -319,34 +192,17 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"C", {"A"}},
             {"A", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "A" << "D";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-
-        QTest::newRow("BypassPotentialMergePointDirectAncestorBottom") << "E" << "A" << QList<QString>{"D", "B", "C"} << inheritanceMatrix << classes << "Null";
+        classes.insert("A", new Class("A"));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("D", new Class("D", {"B", "C"}));
+        classes.insert("E", new Class("E", {"A", "D"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "D");
+        intermediates.insert(2, "B");
+        intermediates.insert(2, "C");
+        QTest::newRow("BypassPotentialMergePointDirectAncestorBottom") << "E" << "A" << intermediates << inheritanceMatrix << classes << "Null";
     }
 
     // Тест 10: две точки слияния
@@ -359,39 +215,19 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"A", {"X"}},
             {"X", {}}
         };
-
         ClassMap classes;
-        Class* x = new Class();
-        x->className = "X";
-
-        Class* a = new Class();
-        a->className = "A";
-        a->directAncestors << "X";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "D";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-        classes.insert("X", x);
-
-        QTest::newRow("TwoMergePoints") << "E" << "X" << QList<QString>{"D", "B", "C", "A"} << inheritanceMatrix << classes << "D";
+        classes.insert("X", new Class("X"));
+        classes.insert("A", new Class("A", {"X"}));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("D", new Class("D", {"B", "C"}));
+        classes.insert("E", new Class("E", {"D"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "D");
+        intermediates.insert(2, "B");
+        intermediates.insert(2, "C");
+        intermediates.insert(3, "A");
+        QTest::newRow("TwoMergePoints") << "E" << "X" << intermediates << inheritanceMatrix << classes << "D";
     }
 
     // Тест 11: обход первой точки слияния во вторую точку слияния
@@ -404,39 +240,19 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"A", {"X"}},
             {"X", {}}
         };
-
         ClassMap classes;
-        Class* x = new Class();
-        x->className = "X";
-
-        Class* a = new Class();
-        a->className = "A";
-        a->directAncestors << "X";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "A" << "D";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-        classes.insert("X", x);
-
-        QTest::newRow("BypassFirstMergePointToSecond") << "E" << "X" << QList<QString>{"D", "B", "C", "A"} << inheritanceMatrix << classes << "A";
+        classes.insert("X", new Class("X"));
+        classes.insert("A", new Class("A", {"X"}));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("D", new Class("D", {"B", "C"}));
+        classes.insert("E", new Class("E", {"A", "D"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "D");
+        intermediates.insert(2, "B");
+        intermediates.insert(2, "C");
+        intermediates.insert(1, "A");
+        QTest::newRow("BypassFirstMergePointToSecond") << "E" << "X" << intermediates << inheritanceMatrix << classes << "A";
     }
 
     // Тест 12: обход первой точки слияния в промежуточный класс
@@ -449,39 +265,19 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"A", {"X"}},
             {"X", {}}
         };
-
         ClassMap classes;
-        Class* x = new Class();
-        x->className = "X";
-
-        Class* a = new Class();
-        a->className = "A";
-        a->directAncestors << "X";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "D" << "B";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-        classes.insert("X", x);
-
-        QTest::newRow("BypassFirstMergePointToIntermediate") << "E" << "X" << QList<QString>{"D", "B", "C", "A"} << inheritanceMatrix << classes << "A";
+        classes.insert("X", new Class("X"));
+        classes.insert("A", new Class("A", {"X"}));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("D", new Class("D", {"B", "C"}));
+        classes.insert("E", new Class("E", {"D", "B"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "D");
+        intermediates.insert(1, "B");
+        intermediates.insert(2, "C");
+        intermediates.insert(2, "A");
+        QTest::newRow("BypassFirstMergePointToIntermediate") << "E" << "X" << intermediates << inheritanceMatrix << classes << "A";
     }
 
     // Тест 13: обход обеих точек слияния одновременно
@@ -494,39 +290,19 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"A", {"X"}},
             {"X", {}}
         };
-
         ClassMap classes;
-        Class* x = new Class();
-        x->className = "X";
-
-        Class* a = new Class();
-        a->className = "A";
-        a->directAncestors << "X";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "D" << "X";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-        classes.insert("X", x);
-
-        QTest::newRow("BypassBothMergePointsSimultaneously") << "E" << "X" << QList<QString>{"D", "B", "C", "A"} << inheritanceMatrix << classes << "Null";
+        classes.insert("X", new Class("X"));
+        classes.insert("A", new Class("A", {"X"}));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("D", new Class("D", {"B", "C"}));
+        classes.insert("E", new Class("E", {"D", "X"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "D");
+        intermediates.insert(2, "B");
+        intermediates.insert(2, "C");
+        intermediates.insert(3, "A");
+        QTest::newRow("BypassBothMergePointsSimultaneously") << "E" << "X" << intermediates << inheritanceMatrix << classes << "Null";
     }
 
     // Тест 14: обход обеих точек слияния при помощи нескольких путей
@@ -539,39 +315,19 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"A", {"X"}},
             {"X", {}}
         };
-
         ClassMap classes;
-        Class* x = new Class();
-        x->className = "X";
-
-        Class* a = new Class();
-        a->className = "A";
-        a->directAncestors << "X";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "A" << "D" << "X";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-        classes.insert("X", x);
-
-        QTest::newRow("BypassBothMergePointsMultiplePaths") << "E" << "X" << QList<QString>{"D", "B", "C", "A"} << inheritanceMatrix << classes << "Null";
+        classes.insert("X", new Class("X"));
+        classes.insert("A", new Class("A", {"X"}));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("D", new Class("D", {"B", "C"}));
+        classes.insert("E", new Class("E", {"A", "D", "X"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "D");
+        intermediates.insert(2, "B");
+        intermediates.insert(2, "C");
+        intermediates.insert(1, "A");
+        QTest::newRow("BypassBothMergePointsMultiplePaths") << "E" << "X" << intermediates << inheritanceMatrix << classes << "Null";
     }
 
     // Тест 15: разная глубина наследования в одной из веток промежуточных классов
@@ -585,44 +341,21 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"B", {"A"}},
             {"A", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B";
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors << "D";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* g = new Class();
-        g->className = "G";
-        g->directAncestors << "F";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "C" << "G";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("D", d);
-        classes.insert("F", f);
-        classes.insert("C", c);
-        classes.insert("G", g);
-        classes.insert("E", e);
-
-        QTest::newRow("DifferentInheritanceDepthOneBranch") << "E" << "A" << QList<QString>{"C", "G", "F", "D", "B"} << inheritanceMatrix << classes << "Null";
+        classes.insert("A", new Class("A"));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("D", new Class("D", {"B"}));
+        classes.insert("F", new Class("F", {"D"}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("G", new Class("G", {"F"}));
+        classes.insert("E", new Class("E", {"C", "G"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "C");
+        intermediates.insert(1, "G");
+        intermediates.insert(2, "F");
+        intermediates.insert(3, "D");
+        intermediates.insert(4, "B");
+        QTest::newRow("DifferentInheritanceDepthOneBranch") << "E" << "A" << intermediates << inheritanceMatrix << classes << "Null";
     }
 
     // Тест 16: разная глубина наследования с точкой слияния перед промежуточными классами
@@ -636,44 +369,21 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"B", {"A"}},
             {"A", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B";
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors << "D";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* g = new Class();
-        g->className = "G";
-        g->directAncestors << "C" << "F";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "G";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("D", d);
-        classes.insert("F", f);
-        classes.insert("C", c);
-        classes.insert("G", g);
-        classes.insert("E", e);
-
-        QTest::newRow("DifferentInheritanceDepthAfterMergePoint") << "E" << "A" << QList<QString>{"G", "C", "F", "D", "B"} << inheritanceMatrix << classes << "G";
+        classes.insert("A", new Class("A"));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("D", new Class("D", {"B"}));
+        classes.insert("F", new Class("F", {"D"}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("G", new Class("G", {"C", "F"}));
+        classes.insert("E", new Class("E", {"G"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "G");
+        intermediates.insert(2, "C");
+        intermediates.insert(2, "F");
+        intermediates.insert(3, "D");
+        intermediates.insert(4, "B");
+        QTest::newRow("DifferentInheritanceDepthAfterMergePoint") << "E" << "A" << intermediates << inheritanceMatrix << classes << "G";
     }
 
     // Тест 17: разная глубина наследования с двумя точками слияния
@@ -689,54 +399,25 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"A", {"X"}},
             {"X", {}}
         };
-
         ClassMap classes;
-        Class* x = new Class();
-        x->className = "X";
-
-        Class* a = new Class();
-        a->className = "A";
-        a->directAncestors << "X";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* h = new Class();
-        h->className = "H";
-        h->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "H";
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors << "D";
-
-        Class* g = new Class();
-        g->className = "G";
-        g->directAncestors << "F" << "C";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "G";
-
-        classes.insert("X", x);
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("H", h);
-        classes.insert("D", d);
-        classes.insert("C", c);
-        classes.insert("F", f);
-        classes.insert("G", g);
-        classes.insert("E", e);
-
-        QTest::newRow("DifferentInheritanceDepthTwoMergePoints") << "E" << "X" << QList<QString>{"G", "F", "C", "D", "H", "B", "A"} << inheritanceMatrix << classes << "G";
+        classes.insert("X", new Class("X"));
+        classes.insert("A", new Class("A", {"X"}));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("H", new Class("H", {"A"}));
+        classes.insert("D", new Class("D", {"B"}));
+        classes.insert("C", new Class("C", {"H"}));
+        classes.insert("F", new Class("F", {"D"}));
+        classes.insert("G", new Class("G", {"F", "C"}));
+        classes.insert("E", new Class("E", {"G"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "G");
+        intermediates.insert(2, "F");
+        intermediates.insert(2, "C");
+        intermediates.insert(3, "D");
+        intermediates.insert(3, "H");
+        intermediates.insert(4, "B");
+        intermediates.insert(4, "A");
+        QTest::newRow("DifferentInheritanceDepthTwoMergePoints") << "E" << "X" << intermediates << inheritanceMatrix << classes << "G";
     }
 
     // Тест 18: отсутствие intermediates
@@ -745,19 +426,10 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"B", {"A"}},
             {"A", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-
-        QTest::newRow("NoIntermediates") << "B" << "A" << QList<QString>{} << inheritanceMatrix << classes << "Null";
+        classes.insert("A", new Class("A"));
+        classes.insert("B", new Class("B", {"A"}));
+        QTest::newRow("NoIntermediates") << "B" << "A" << IntermediatesMap() << inheritanceMatrix << classes << "Null";
     }
 
     // Тест 19: только один класс intermediates
@@ -767,24 +439,13 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"B", {"A"}},
             {"A", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "B";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-
-        QTest::newRow("SingleIntermediate") << "B" << "A" << QList<QString>{"B"} << inheritanceMatrix << classes << "B";
+        classes.insert("A", new Class("A"));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"B"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        QTest::newRow("SingleIntermediate") << "B" << "A" << intermediates << inheritanceMatrix << classes << "B";
     }
 
     // Тест 20: прямая ветвь наследования
@@ -796,34 +457,17 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"B", {"A"}},
             {"A", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "B";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "C";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "D";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-
-        QTest::newRow("StraightInheritanceBranch") << "E" << "A" << QList<QString>{"D", "C", "B"} << inheritanceMatrix << classes << "D";
+        classes.insert("A", new Class("A"));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"B"}));
+        classes.insert("D", new Class("D", {"C"}));
+        classes.insert("E", new Class("E", {"D"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "D");
+        intermediates.insert(2, "C");
+        intermediates.insert(3, "B");
+        QTest::newRow("StraightInheritanceBranch") << "E" << "A" << intermediates << inheritanceMatrix << classes << "D";
     }
 
     // Тест 21: два ромба, связанные друг с другом
@@ -836,42 +480,22 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"B", {"A"}},
             {"A", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "B";
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors << "E" << "D";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-        classes.insert("F", f);
-
-        QTest::newRow("TwoConnectedDiamonds") << "F" << "A" << QList<QString>{"E", "D", "B", "C"} << inheritanceMatrix << classes << "Null";
+        classes.insert("A", new Class("A"));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("D", new Class("D", {"B", "C"}));
+        classes.insert("E", new Class("E", {"B"}));
+        classes.insert("F", new Class("F", {"E", "D"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "E");
+        intermediates.insert(1, "D");
+        intermediates.insert(2, "B");
+        intermediates.insert(2, "C");
+        QTest::newRow("TwoConnectedDiamonds") << "F" << "A" << intermediates << inheritanceMatrix << classes << "Null";
     }
 
-    // Test case 22: testChainOfMergePoints
+    // Тест 22: цепочка точек слияния
     {
         InheritanceMatrix inheritanceMatrix = {
             {"R", {"P", "O", "K", "I", "J", "H", "F", "G", "E", "C", "D", "B", "A"}},
@@ -889,79 +513,81 @@ void TestFindMergePoint::testFindMergePoint_data()
             {"B", {"A"}},
             {"A", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
+        classes.insert("A", new Class("A"));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"B"}));
+        classes.insert("D", new Class("D", {"B"}));
+        classes.insert("E", new Class("E", {"C", "D"}));
+        classes.insert("F", new Class("F", {"E"}));
+        classes.insert("G", new Class("G", {"E"}));
+        classes.insert("H", new Class("H", {"F", "G"}));
+        classes.insert("I", new Class("I", {"H"}));
+        classes.insert("J", new Class("J", {"H"}));
+        classes.insert("K", new Class("K", {"I", "J"}));
+        classes.insert("P", new Class("P", {"K"}));
+        classes.insert("O", new Class("O", {"K"}));
+        classes.insert("R", new Class("R", {"P", "O"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "P");
+        intermediates.insert(1, "O");
+        intermediates.insert(2, "K");
+        intermediates.insert(3, "I");
+        intermediates.insert(3, "J");
+        intermediates.insert(4, "H");
+        intermediates.insert(5, "F");
+        intermediates.insert(5, "G");
+        intermediates.insert(6, "E");
+        intermediates.insert(7, "C");
+        intermediates.insert(7, "D");
+        intermediates.insert(8, "B");
+        QTest::newRow("ChainOfMergePoints") << "R" << "A" << intermediates << inheritanceMatrix << classes << "K";
+    }
 
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "B";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "C" << "D";
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors << "E";
-
-        Class* g = new Class();
-        g->className = "G";
-        g->directAncestors << "E";
-
-        Class* h = new Class();
-        h->className = "H";
-        h->directAncestors << "F" << "G";
-
-        Class* i = new Class();
-        i->className = "I";
-        i->directAncestors << "H";
-
-        Class* j = new Class();
-        j->className = "J";
-        j->directAncestors << "H";
-
-        Class* k = new Class();
-        k->className = "K";
-        k->directAncestors << "I" << "J";
-
-        Class* p = new Class();
-        p->className = "P";
-        p->directAncestors << "K";
-
-        Class* o = new Class();
-        o->className = "O";
-        o->directAncestors << "K";
-
-        Class* r = new Class();
-        r->className = "R";
-        r->directAncestors << "P" << "O";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-        classes.insert("F", f);
-        classes.insert("G", g);
-        classes.insert("H", h);
-        classes.insert("I", i);
-        classes.insert("J", j);
-        classes.insert("K", k);
-        classes.insert("P", p);
-        classes.insert("O", o);
-        classes.insert("R", r);
-
-        QTest::newRow("ChainOfMergePoints") << "R" << "A" << QList<QString>{"P", "O", "K", "I", "J", "H", "F", "G", "E", "C", "D", "B"} << inheritanceMatrix << classes << "K";
+    // Тест 23: цепочка связанных друг с другом ромбов
+    {
+        InheritanceMatrix inheritanceMatrix = {
+            {"O", {"P", "K", "I", "J", "H", "F", "G", "E", "D", "C", "B", "A"}},
+            {"P", {"I", "J", "F", "G", "E", "C", "B", "A"}},
+            {"K", {"J", "H", "G", "E", "D", "C", "B", "A"}},
+            {"J", {"G", "E", "C", "B", "A"}},
+            {"I", {"F", "G", "C", "A"}},
+            {"H", {"E", "D", "B", "A"}},
+            {"F", {"C", "A"}},
+            {"G", {"C", "A"}},
+            {"E", {"B", "A"}},
+            {"C", {"A"}},
+            {"D", {"B", "A"}},
+            {"B", {"A"}},
+            {"A", {}}
+        };
+        ClassMap classes;
+        classes.insert("A", new Class("A"));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("D", new Class("D", {"B"}));
+        classes.insert("E", new Class("E", {"B"}));
+        classes.insert("F", new Class("F", {"C"}));
+        classes.insert("G", new Class("G", {"C"}));
+        classes.insert("H", new Class("H", {"E", "D"}));
+        classes.insert("I", new Class("I", {"F", "G"}));
+        classes.insert("J", new Class("J", {"G", "E"}));
+        classes.insert("K", new Class("K", {"J", "H"}));
+        classes.insert("P", new Class("P", {"I", "J"}));
+        classes.insert("O", new Class("O", {"P", "K"}));
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "P");
+        intermediates.insert(1, "K");
+        intermediates.insert(2, "I");
+        intermediates.insert(2, "J");
+        intermediates.insert(2, "H");
+        intermediates.insert(3, "F");
+        intermediates.insert(3, "G");
+        intermediates.insert(3, "E");
+        intermediates.insert(3, "D");
+        intermediates.insert(4, "C");
+        intermediates.insert(4, "B");
+        QTest::newRow("ChainOfRelatedRhombuses") << "O" << "A" << intermediates << inheritanceMatrix << classes << "Null";
     }
 }
 
@@ -969,7 +595,7 @@ void TestFindMergePoint::testFindMergePoint()
 {
     QFETCH(QString, bottom);
     QFETCH(QString, top);
-    QFETCH(QList<QString>, intermediates);
+    QFETCH(IntermediatesMap, intermediates);
     QFETCH(InheritanceMatrix, inheritanceMatrix);
     QFETCH(ClassMap, classes);
     QFETCH(QString, expected);
@@ -979,6 +605,3 @@ void TestFindMergePoint::testFindMergePoint()
 
     qDeleteAll(classes);
 }
-
-
-

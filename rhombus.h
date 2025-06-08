@@ -7,12 +7,19 @@
 #include <QSet>
 #include "class.h"
 #include <QDebug>
+#include <QMultiMap>
 
 struct Rhombus {
     QString bottom;
     QString top;
-    QList<QString> intermediates;
+    QMultiMap<int, QString> intermediates;
     QMap<QString, QList<Method*>> overriddenMethods;
+
+    Rhombus(const QString& b = QString(), const QString& t = QString(),
+            const QMultiMap<int, QString>& i = QMultiMap<int, QString>(),
+            const QMap<QString, QList<Method*>>& m = QMap<QString, QList<Method*>>())
+        : bottom(b), top(t), intermediates(i), overriddenMethods(m) {}
+
 
     // Полное сравнение всех полей, включая методы
     bool operator==(const Rhombus& other) const {
@@ -21,7 +28,7 @@ struct Rhombus {
             return false;
         }
 
-        // 2. Сравнение переопределенных методов
+        // 2. Сравнение переопределённых методов
         if (overriddenMethods.size() != other.overriddenMethods.size()) {
             return false;
         }
@@ -63,9 +70,13 @@ struct Rhombus {
 
                     if (p1.type != p2.type ||
                         p1.name != p2.name ||
-                        p1.isConst != p2.isConst ||
+                        p1.isTypeConst != p2.isTypeConst ||
+                        p1.isPointerConst != p2.isPointerConst ||
                         p1.isReference != p2.isReference ||
-                        p1.isPointer != p2.isPointer) {
+                        p1.isPointer != p2.isPointer ||
+                        p1.isArray != p2.isArray ||
+                        p1.isPointerToArray != p2.isPointerToArray ||
+                        p1.arrayDimensions != p2.arrayDimensions) {
                         return false;
                     }
                 }
@@ -79,35 +90,45 @@ struct Rhombus {
     }
 };
 
-// Функция хеширования
-inline uint qHash(const Rhombus& rhombus, uint seed = 0) {
-    uint hash = qHash(rhombus.bottom, seed) ^ qHash(rhombus.top, seed);
-
-    // Хеширование intermediates
-    for (const QString& item : rhombus.intermediates) {
-        hash ^= qHash(item);
+// Функция хеширования для QMultiMap<int, QString>
+inline size_t qHash(const QMultiMap<int, QString>& map, size_t seed = 0) {
+    for (auto it = map.constBegin(); it != map.constEnd(); ++it) {
+        seed = qHash(it.key(), seed);        // Хешируем ключ (int)
+        seed = qHash(it.value(), seed);      // Хешируем значение (QString)
     }
+    return seed;
+}
 
-    // Хеширование overriddenMethods
+// Функция хеширования для Rhombus
+inline size_t qHash(const Rhombus& rhombus, size_t seed = 0) {
+    seed = qHash(rhombus.bottom, seed);
+    seed = qHash(rhombus.top, seed);
+    seed = qHash(rhombus.intermediates, seed); // Теперь работает с QMultiMap<int, QString>
+
     for (auto it = rhombus.overriddenMethods.constBegin(); it != rhombus.overriddenMethods.constEnd(); ++it) {
-        hash ^= qHash(it.key());
+        seed = qHash(it.key(), seed);
         for (const Method* method : it.value()) {
-            hash ^= qHash(method->methodName);
-            hash ^= qHash(method->returnType);
-            hash ^= method->isVirtual;
-
+            seed = qHash(method->methodName, seed);
+            seed = qHash(method->returnType, seed);
+            seed = qHash(method->isVirtual, seed);
             for (const Parameter& param : method->parameters) {
-                hash ^= qHash(param.type);
-                hash ^= qHash(param.name);
-                hash ^= param.isConst;
-                hash ^= param.isReference;
-                hash ^= param.isPointer;
+                seed = qHash(param.type, seed);
+                seed = qHash(param.name, seed);
+                seed = qHash(param.isTypeConst, seed);
+                seed = qHash(param.isPointerConst, seed);
+                seed = qHash(param.isReference, seed);
+                seed = qHash(param.isPointer, seed);
+                seed = qHash(param.isArray, seed);
+                seed = qHash(param.isPointerToArray, seed);
+                seed = qHash(param.arrayDimensions, seed);
             }
         }
     }
 
-    return hash;
+    return seed;
 }
+
+QList<Parameter> parseParameters(const QString& parametersString);
 
 
 #endif // RHOMBUS_H

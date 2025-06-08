@@ -3,7 +3,7 @@
 QString findMergePoint(
     QString& bottom,
     QString& top,
-    QList<QString>& intermediates,
+    QMultiMap<int, QString>& intermediates,
     QMap<QString, QSet<QString>>& inheritanceMatrix,
     QMap<QString, Class*>& classes
     ) {

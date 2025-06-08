@@ -2,7 +2,6 @@
 #include "findintermediates.h"
 #include "class.h"
 
-// Алиасы для работы QFetch
 using InheritanceMatrix = QMap<QString, QSet<QString>>;
 using ClassMap = QMap<QString, Class*>;
 using IntermediatesMap = QMultiMap<int, QString>;
@@ -23,28 +22,11 @@ void TestFindIntermediates::testFindIntermediates_data()
             {"C", {"A"}},
             {"A", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-
+        classes.insert("A", new Class("A"));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("D", new Class("D", {"B", "C"}));
         IntermediatesMap expected;
         expected.insert(1, "B");
         expected.insert(1, "C");
@@ -58,22 +40,10 @@ void TestFindIntermediates::testFindIntermediates_data()
             {"A", {}},
             {"B", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* b = new Class();
-        b->className = "B";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "A" << "B";
-
-        classes.insert("A", a);
-        classes.insert("D", d);
-        classes.insert("B", b);
-
+        classes.insert("A", new Class("A"));
+        classes.insert("B", new Class("B"));
+        classes.insert("D", new Class("D", {"A", "B"}));
         QTest::newRow("NoClassesBetween") << inheritanceMatrix << classes << "A" << "D" << IntermediatesMap();
     }
 
@@ -87,36 +57,13 @@ void TestFindIntermediates::testFindIntermediates_data()
             {"E", {}},
             {"F", {}}
         };
-
         ClassMap classes;
-        Class* f = new Class();
-        f->className = "F";
-
-        Class* a = new Class();
-        a->className = "A";
-        a->directAncestors << "F";
-
-        Class* c = new Class();
-        c->className = "C";
-
-        Class* e = new Class();
-        e->className = "E";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C" << "E";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("D", d);
-        classes.insert("C", c);
-        classes.insert("E", e);
-        classes.insert("F", f);
-
+        classes.insert("F", new Class("F"));
+        classes.insert("A", new Class("A", {"F"}));
+        classes.insert("C", new Class("C"));
+        classes.insert("E", new Class("E"));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("D", new Class("D", {"B", "C", "E"}));
         IntermediatesMap expected;
         expected.insert(1, "B");
         QTest::newRow("OneClassBetween") << inheritanceMatrix << classes << "A" << "D" << expected;
@@ -134,46 +81,15 @@ void TestFindIntermediates::testFindIntermediates_data()
             {"H", {}},
             {"G", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* h = new Class();
-        h->className = "H";
-
-        Class* g = new Class();
-        g->className = "G";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "C";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "B" << "F" << "G";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "E";
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors << "H";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-        classes.insert("F", f);
-        classes.insert("H", h);
-        classes.insert("G", g);
-
+        classes.insert("A", new Class("A"));
+        classes.insert("H", new Class("H"));
+        classes.insert("G", new Class("G"));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("B", new Class("B", {"C"}));
+        classes.insert("E", new Class("E", {"B", "F", "G"}));
+        classes.insert("D", new Class("D", {"E"}));
+        classes.insert("F", new Class("F", {"H"}));
         IntermediatesMap expected;
         expected.insert(1, "E");
         expected.insert(2, "B");
@@ -190,32 +106,12 @@ void TestFindIntermediates::testFindIntermediates_data()
             {"A", {}},
             {"E", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "E";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "E";
-
-        Class* e = new Class();
-        e->className = "E";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "A" << "B" << "C";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-
+        classes.insert("A", new Class("A"));
+        classes.insert("C", new Class("C", {"E"}));
+        classes.insert("B", new Class("B", {"E"}));
+        classes.insert("E", new Class("E"));
+        classes.insert("D", new Class("D", {"A", "B", "C"}));
         QTest::newRow("BottomAncestorsNotConnectedToTop") << inheritanceMatrix << classes << "A" << "D" << IntermediatesMap();
     }
 
@@ -227,28 +123,11 @@ void TestFindIntermediates::testFindIntermediates_data()
             {"C", {"A"}},
             {"A", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "A" << "B" << "C";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-
+        classes.insert("A", new Class("A"));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("D", new Class("D", {"A", "B", "C"}));
         IntermediatesMap expected;
         expected.insert(1, "B");
         expected.insert(1, "C");
@@ -266,41 +145,14 @@ void TestFindIntermediates::testFindIntermediates_data()
             {"B", {}},
             {"C", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* b = new Class();
-        b->className = "B";
-
-        Class* c = new Class();
-        c->className = "C";
-
-        Class* g = new Class();
-        g->className = "G";
-        g->directAncestors << "A";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "A";
-
-        Class* h = new Class();
-        h->className = "H";
-        h->directAncestors << "G" << "E" << "B" << "C";
-
-        Class* i = new Class();
-        i->className = "I";
-        i->directAncestors << "H";
-
-        classes.insert("A", a);
-        classes.insert("G", g);
-        classes.insert("E", e);
-        classes.insert("H", h);
-        classes.insert("I", i);
-        classes.insert("B", h);
-        classes.insert("C", i);
-
+        classes.insert("A", new Class("A"));
+        classes.insert("B", new Class("B"));
+        classes.insert("C", new Class("C"));
+        classes.insert("G", new Class("G", {"A"}));
+        classes.insert("E", new Class("E", {"A"}));
+        classes.insert("H", new Class("H", {"G", "E", "B", "C"}));
+        classes.insert("I", new Class("I", {"H"}));
         IntermediatesMap expected;
         expected.insert(1, "H");
         expected.insert(2, "G");
@@ -320,46 +172,15 @@ void TestFindIntermediates::testFindIntermediates_data()
             {"F", {}},
             {"X", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        a->directAncestors << "X";
-
-        Class* c = new Class();
-        c->className = "C";
-
-        Class* f = new Class();
-        f->className = "F";
-
-        Class* x = new Class();
-        x->className = "X";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* g = new Class();
-        g->className = "G";
-        g->directAncestors << "B" << "C";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "B" << "F";
-
-        Class* i = new Class();
-        i->className = "I";
-        i->directAncestors << "G" << "E";
-
-        classes.insert("A", a);
-        classes.insert("G", g);
-        classes.insert("E", e);
-        classes.insert("B", b);
-        classes.insert("I", i);
-        classes.insert("C", c);
-        classes.insert("F", f);
-        classes.insert("X", x);
-
+        classes.insert("A", new Class("A", {"X"}));
+        classes.insert("C", new Class("C"));
+        classes.insert("F", new Class("F"));
+        classes.insert("X", new Class("X"));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("G", new Class("G", {"B", "C"}));
+        classes.insert("E", new Class("E", {"B", "F"}));
+        classes.insert("I", new Class("I", {"G", "E"}));
         IntermediatesMap expected;
         expected.insert(1, "G");
         expected.insert(1, "E");
@@ -381,54 +202,17 @@ void TestFindIntermediates::testFindIntermediates_data()
             {"H", {}},
             {"J", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* i = new Class();
-        i->className = "I";
-
-        Class* j = new Class();
-        j->className = "J";
-
-        Class* g = new Class();
-        g->className = "G";
-
-        Class* h = new Class();
-        h->className = "H";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C" << "H";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "B" << "G";
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors << "E" << "D" << "I" << "J";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-        classes.insert("F", f);
-        classes.insert("I", i);
-        classes.insert("G", g);
-        classes.insert("H", h);
-        classes.insert("J", j);
-
+        classes.insert("A", new Class("A"));
+        classes.insert("I", new Class("I"));
+        classes.insert("J", new Class("J"));
+        classes.insert("G", new Class("G"));
+        classes.insert("H", new Class("H"));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("D", new Class("D", {"B", "C", "H"}));
+        classes.insert("E", new Class("E", {"B", "G"}));
+        classes.insert("F", new Class("F", {"E", "D", "I", "J"}));
         IntermediatesMap expected;
         expected.insert(1, "E");
         expected.insert(1, "D");
@@ -461,104 +245,27 @@ void TestFindIntermediates::testFindIntermediates_data()
             {"Y", {}},
             {"Z", {}}
         };
-
         ClassMap classes;
-
-        Class* m = new Class();
-        m->className = "M";
-
-        Class* l = new Class();
-        l->className = "L";
-
-        Class* x = new Class();
-        x->className = "X";
-
-        Class* q = new Class();
-        q->className = "Q";
-
-        Class* y = new Class();
-        y->className = "Y";
-
-        Class* z = new Class();
-        z->className = "Z";
-
-        Class* a = new Class();
-        a->className = "A";
-        a->directAncestors << "Y";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "B";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "Y";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "C" << "D" << "Q";
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors << "E";
-
-        Class* g = new Class();
-        g->className = "G";
-        g->directAncestors << "E";
-
-        Class* h = new Class();
-        h->className = "H";
-        h->directAncestors << "F" << "G" << "X";
-
-        Class* i = new Class();
-        i->className = "I";
-        i->directAncestors << "H";
-
-        Class* j = new Class();
-        j->className = "J";
-        j->directAncestors << "H";
-
-        Class* k = new Class();
-        k->className = "K";
-        k->directAncestors << "I" << "J";
-
-        Class* p = new Class();
-        p->className = "P";
-        p->directAncestors << "K";
-
-        Class* o = new Class();
-        o->className = "O";
-        o->directAncestors << "K";
-
-        Class* r = new Class();
-        r->className = "R";
-        r->directAncestors << "P" << "O" << "M" << "L";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-        classes.insert("F", f);
-        classes.insert("G", g);
-        classes.insert("H", h);
-        classes.insert("I", i);
-        classes.insert("J", j);
-        classes.insert("K", k);
-        classes.insert("P", p);
-        classes.insert("O", o);
-        classes.insert("R", r);
-        classes.insert("M", m);
-        classes.insert("L", l);
-        classes.insert("X", x);
-        classes.insert("Q", q);
-        classes.insert("Y", y);
-        classes.insert("Z", z);
-
+        classes.insert("M", new Class("M"));
+        classes.insert("L", new Class("L"));
+        classes.insert("X", new Class("X"));
+        classes.insert("Q", new Class("Q"));
+        classes.insert("Y", new Class("Y"));
+        classes.insert("Z", new Class("Z"));
+        classes.insert("A", new Class("A", {"Y"}));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"B"}));
+        classes.insert("D", new Class("D", {"B", "Y"}));
+        classes.insert("E", new Class("E", {"C", "D", "Q"}));
+        classes.insert("F", new Class("F", {"E"}));
+        classes.insert("G", new Class("G", {"E"}));
+        classes.insert("H", new Class("H", {"F", "G", "X"}));
+        classes.insert("I", new Class("I", {"H"}));
+        classes.insert("J", new Class("J", {"H"}));
+        classes.insert("K", new Class("K", {"I", "J"}));
+        classes.insert("P", new Class("P", {"K"}));
+        classes.insert("O", new Class("O", {"K"}));
+        classes.insert("R", new Class("R", {"P", "O", "M", "L"}));
         IntermediatesMap expected;
         expected.insert(1, "P");
         expected.insert(1, "O");
@@ -584,32 +291,12 @@ void TestFindIntermediates::testFindIntermediates_data()
             {"C", {}},
             {"E", {}}
         };
-
         ClassMap classes;
-
-        Class* c = new Class();
-        c->className = "C";
-
-        Class* e = new Class();
-        e->className = "E";
-
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A" << "C";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "A" << "B" << "E";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("D", d);
-        classes.insert("C", c);
-        classes.insert("E", e);
-
+        classes.insert("C", new Class("C"));
+        classes.insert("E", new Class("E"));
+        classes.insert("A", new Class("A"));
+        classes.insert("B", new Class("B", {"A", "C"}));
+        classes.insert("D", new Class("D", {"A", "B", "E"}));
         IntermediatesMap expected;
         expected.insert(1, "B");
         QTest::newRow("ThreeClassRhombus") << inheritanceMatrix << classes << "A" << "D" << expected;
@@ -632,70 +319,20 @@ void TestFindIntermediates::testFindIntermediates_data()
             {"L", {}},
             {"M", {}}
         };
-
         ClassMap classes;
-
-        Class* n = new Class();
-        n->className = "N";
-
-        Class* o = new Class();
-        o->className = "O";
-
-        Class* l = new Class();
-        l->className = "L";
-
-        Class* m = new Class();
-        m->className = "M";
-
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "X" << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B";
-
-        Class* h = new Class();
-        h->className = "H";
-        h->directAncestors << "X";
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors << "D" << "L" << "M";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "H";
-
-        Class* g = new Class();
-        g->className = "G";
-        g->directAncestors << "C" << "F";
-
-        Class* x = new Class();
-        x->className = "X";
-        x->directAncestors << "A";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "A" << "G" << "N" << "O";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("D", d);
-        classes.insert("H", h);
-        classes.insert("F", f);
-        classes.insert("C", c);
-        classes.insert("G", g);
-        classes.insert("X", x);
-        classes.insert("E", e);
-        classes.insert("N", c);
-        classes.insert("O", g);
-        classes.insert("L", x);
-        classes.insert("M", e);
-
+        classes.insert("N", new Class("N"));
+        classes.insert("O", new Class("O"));
+        classes.insert("L", new Class("L"));
+        classes.insert("M", new Class("M"));
+        classes.insert("A", new Class("A"));
+        classes.insert("B", new Class("B", {"X", "A"}));
+        classes.insert("D", new Class("D", {"B"}));
+        classes.insert("H", new Class("H", {"X"}));
+        classes.insert("F", new Class("F", {"D", "L", "M"}));
+        classes.insert("C", new Class("C", {"H"}));
+        classes.insert("G", new Class("G", {"C", "F"}));
+        classes.insert("X", new Class("X", {"A"}));
+        classes.insert("E", new Class("E", {"A", "G", "N", "O"}));
         IntermediatesMap expected;
         expected.insert(1, "G");
         expected.insert(2, "C");
@@ -719,46 +356,15 @@ void TestFindIntermediates::testFindIntermediates_data()
             {"A", {}},
             {"H", {}}
         };
-
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-
-        Class* f = new Class();
-        f->className = "F";
-
-        Class* h = new Class();
-        h->className = "H";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "F" << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "F";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A" << "H";
-
-        Class* g = new Class();
-        g->className = "G";
-        g->directAncestors << "H";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "D" << "B" << "C" << "G";
-
-        classes.insert("F", f);
-        classes.insert("A", a);
-        classes.insert("H", h);
-        classes.insert("D", d);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("G", g);
-        classes.insert("E", e);
-
+        classes.insert("A", new Class("A"));
+        classes.insert("F", new Class("F"));
+        classes.insert("H", new Class("H"));
+        classes.insert("B", new Class("B", {"F", "A"}));
+        classes.insert("D", new Class("D", {"F"}));
+        classes.insert("C", new Class("C", {"A", "H"}));
+        classes.insert("G", new Class("G", {"H"}));
+        classes.insert("E", new Class("E", {"D", "B", "C", "G"}));
         IntermediatesMap expected;
         expected.insert(1, "B");
         expected.insert(1, "C");
@@ -778,53 +384,16 @@ void TestFindIntermediates::testFindIntermediates_data()
             {"H", {"X"}},
             {"X", {}}
         };
-
         ClassMap classes;
-        Class* x = new Class();
-        x->className = "X";
-
-        Class* a = new Class();
-        a->className = "A";
-        a->directAncestors << "X";
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors << "X";
-
-        Class* h = new Class();
-        h->className = "H";
-        h->directAncestors << "X";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "F" << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "F";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A" << "H";
-
-        Class* g = new Class();
-        g->className = "G";
-        g->directAncestors << "H";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "D" << "B" << "C" << "G";
-
-        classes.insert("F", f);
-        classes.insert("A", a);
-        classes.insert("H", h);
-        classes.insert("D", d);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("G", g);
-        classes.insert("E", e);
-        classes.insert("X", x);
-
+        classes.insert("X", new Class("X"));
+        classes.insert("A", new Class("A", {"X"}));
+        classes.insert("F", new Class("F", {"X"}));
+        classes.insert("H", new Class("H", {"X"}));
+        classes.insert("B", new Class("B", {"F", "A"}));
+        classes.insert("D", new Class("D", {"F"}));
+        classes.insert("C", new Class("C", {"A", "H"}));
+        classes.insert("G", new Class("G", {"H"}));
+        classes.insert("E", new Class("E", {"D", "B", "C", "G"}));
         IntermediatesMap expected;
         expected.insert(1, "B");
         expected.insert(1, "C");
@@ -844,53 +413,16 @@ void TestFindIntermediates::testFindIntermediates_data()
             {"H", {"X"}},
             {"X", {}}
         };
-
         ClassMap classes;
-        Class* x = new Class();
-        x->className = "X";
-
-        Class* a = new Class();
-        a->className = "A";
-        a->directAncestors << "X";
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors << "X";
-
-        Class* h = new Class();
-        h->className = "H";
-        h->directAncestors << "X";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "F" << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "F";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A" << "H";
-
-        Class* g = new Class();
-        g->className = "G";
-        g->directAncestors << "H";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "D" << "B" << "C" << "G";
-
-        classes.insert("F", f);
-        classes.insert("A", a);
-        classes.insert("H", h);
-        classes.insert("D", d);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("G", g);
-        classes.insert("E", e);
-        classes.insert("X", x);
-
+        classes.insert("X", new Class("X"));
+        classes.insert("A", new Class("A", {"X"}));
+        classes.insert("F", new Class("F", {"X"}));
+        classes.insert("H", new Class("H", {"X"}));
+        classes.insert("B", new Class("B", {"F", "A"}));
+        classes.insert("D", new Class("D", {"F"}));
+        classes.insert("C", new Class("C", {"A", "H"}));
+        classes.insert("G", new Class("G", {"H"}));
+        classes.insert("E", new Class("E", {"D", "B", "C", "G"}));
         IntermediatesMap expected;
         expected.insert(1, "D");
         expected.insert(1, "B");
@@ -918,66 +450,19 @@ void TestFindIntermediates::testFindIntermediates_data()
             {"I", {}},
             {"X", {}}
         };
-
         ClassMap classes;
-        Class* x = new Class();
-        x->className = "X";
-
-        Class* i = new Class();
-        i->className = "I";
-
-        Class* j = new Class();
-        j->className = "J";
-        j->directAncestors << "I";
-
-        Class* k = new Class();
-        k->className = "K";
-        k->directAncestors << "I";
-
-        Class* a = new Class();
-        a->className = "A";
-        a->directAncestors << "X";
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors << "X";
-
-        Class* h = new Class();
-        h->className = "H";
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "F" << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "F";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A" << "H";
-
-        Class* g = new Class();
-        g->className = "G";
-        g->directAncestors << "H";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "D" << "B" << "C" << "G" << "J" << "K";
-
-        classes.insert("F", f);
-        classes.insert("A", a);
-        classes.insert("H", h);
-        classes.insert("D", d);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("G", g);
-        classes.insert("E", e);
-        classes.insert("X", x);
-        classes.insert("I", i);
-        classes.insert("J", j);
-        classes.insert("K", k);
-
+        classes.insert("X", new Class("X"));
+        classes.insert("I", new Class("I"));
+        classes.insert("J", new Class("J", {"I"}));
+        classes.insert("K", new Class("K", {"I"}));
+        classes.insert("A", new Class("A", {"X"}));
+        classes.insert("F", new Class("F", {"X"}));
+        classes.insert("H", new Class("H"));
+        classes.insert("B", new Class("B", {"F", "A"}));
+        classes.insert("D", new Class("D", {"F"}));
+        classes.insert("C", new Class("C", {"A", "H"}));
+        classes.insert("G", new Class("G", {"H"}));
+        classes.insert("E", new Class("E", {"D", "B", "C", "G", "J", "K"}));
         IntermediatesMap expected;
         expected.insert(1, "D");
         expected.insert(1, "B");

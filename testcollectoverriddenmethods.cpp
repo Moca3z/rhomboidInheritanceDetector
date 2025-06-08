@@ -5,6 +5,7 @@
 using InheritanceMatrix = QMap<QString, QSet<QString>>;
 using ClassMap = QMap<QString, Class*>;
 using MethodMap = QMap<QString, QList<Method*>>;
+using IntermediatesMap = QMultiMap<int, QString>;
 
 void TestCollectOverridden::testCollectOverridden_data()
 {
@@ -13,8 +14,11 @@ void TestCollectOverridden::testCollectOverridden_data()
     QTest::addColumn<QString>("bottomClass");
     QTest::addColumn<QString>("topClass");
     QTest::addColumn<QString>("mergePoint");
-    QTest::addColumn<QList<QString>>("intermediates");
+    QTest::addColumn<IntermediatesMap>("intermediates");
     QTest::addColumn<MethodMap>("expectedResult");
+
+    // Общий параметр для большинства тестов
+    Parameter p1("int", "count");
 
     // Тест 1: переопределения нет ни в одном потомке top
     {
@@ -26,40 +30,17 @@ void TestCollectOverridden::testCollectOverridden_data()
         };
 
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method = new Method();
-        method->returnType = "Void";
-        method->methodName = "method";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "count";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        method->parameters = {p1};
-        a->methods.append(method);
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
+        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("Void", "count", {})}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("D", new Class("D", {"B", "C"}));
 
         MethodMap expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "C");
 
-        QTest::newRow("NoOverriddenMethods") << inheritanceMatrix << classes << "A" << "B" << "Null" << QList<QString>{"B", "C"} << expectedResult;
+        QTest::newRow("NoOverriddenMethods") << inheritanceMatrix << classes << "A" << "B" << "Null" << intermediates << expectedResult;
     }
 
     // Тест 2: переопределение есть только в классе bottom
@@ -72,45 +53,17 @@ void TestCollectOverridden::testCollectOverridden_data()
         };
 
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method = new Method();
-        method->returnType = "Void";
-        method->methodName = "method";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "count";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        method->parameters = {p1};
-        a->methods.append(method);
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C";
-        Method* methodD = new Method();
-        methodD->returnType = "Void";
-        methodD->methodName = "method";
-        methodD->parameters = {p1};
-        d->methods.append(methodD);
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
+        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("Void", "count", {})}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("D", new Class("D", {"B", "C"}, {new Method("Void", "method", {})}));
 
         MethodMap expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "C");
 
-        QTest::newRow("OverriddenInBottomOnly") << inheritanceMatrix << classes << "D" << "A" << "Null" << QList<QString>{"B", "C"} << expectedResult;
+        QTest::newRow("OverriddenInBottomOnly") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
     }
 
     // Тест 3: переопределение есть в одном из промежуточных классов
@@ -123,50 +76,19 @@ void TestCollectOverridden::testCollectOverridden_data()
         };
 
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method = new Method();
-        method->returnType = "Void";
-        method->methodName = "method";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "count";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        method->parameters = {p1};
-        a->methods.append(method);
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-        Method* methodB = new Method();
-        methodB->returnType = "Void";
-        methodB->methodName = "method";
-        methodB->parameters = {p1};
-        b->methods.append(methodB);
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
+        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {p1})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("Void", "method", {p1})}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("D", new Class("D", {"B", "C"}));
 
         MethodMap expectedResult;
-        Method* expectedMethod = new Method();
-        expectedMethod->returnType = "Void";
-        expectedMethod->methodName = "method";
-        expectedMethod->parameters = {p1};
-        expectedResult["B"] = {expectedMethod};
+        expectedResult["B"] = {new Method("Void", "method", {p1})};
 
-        QTest::newRow("OverriddenInOneIntermediate") << inheritanceMatrix << classes << "D" << "A" << "Null" << QList<QString>{"B", "C"} << expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "C");
+
+        QTest::newRow("OverriddenInOneIntermediate") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
     }
 
     // Тест 4: переопределение нескольких методов в одном классе
@@ -179,79 +101,27 @@ void TestCollectOverridden::testCollectOverridden_data()
         };
 
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method1 = new Method();
-        method1->returnType = "Void";
-        method1->methodName = "method1";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "count";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        method1->parameters = {p1};
-        Method* method2 = new Method();
-        method2->returnType = "Void";
-        method2->methodName = "method2";
-        method2->parameters = {p1};
-        Method* method3 = new Method();
-        method3->returnType = "Void";
-        method3->methodName = "method3";
-        method3->parameters = {p1};
-        a->methods.append(method1);
-        a->methods.append(method2);
-        a->methods.append(method3);
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-        Method* method1B = new Method();
-        method1B->returnType = "Void";
-        method1B->methodName = "method1";
-        method1B->parameters = {p1};
-        Method* method3B = new Method();
-        method3B->returnType = "Void";
-        method3B->methodName = "method3";
-        method3B->parameters = {p1};
-        b->methods.append(method1B);
-        b->methods.append(method3B);
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-        Method* method2C = new Method();
-        method2C->returnType = "Void";
-        method2C->methodName = "method2";
-        method2C->parameters = {p1};
-        c->methods.append(method2C);
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
+        classes.insert("A", new Class("A", {}, {
+                                                   new Method("Void", "method1", {}),
+                                                   new Method("Void", "method2", {}),
+                                                   new Method("Void", "method3", {})
+                                               }));
+        classes.insert("B", new Class("B", {"A"}, {
+                                                      new Method("Void", "method1", {}),
+                                                      new Method("Void", "method3", {})
+                                                  }));
+        classes.insert("C", new Class("C", {"A"}, {new Method("Void", "method2", {})}));
+        classes.insert("D", new Class("D", {"B", "C"}));
 
         MethodMap expectedResult;
-        Method* expectedMethod1 = new Method();
-        expectedMethod1->returnType = "Void";
-        expectedMethod1->methodName = "method1";
-        expectedMethod1->parameters = {p1};
-        Method* expectedMethod3 = new Method();
-        expectedMethod3->returnType = "Void";
-        expectedMethod3->methodName = "method3";
-        expectedMethod3->parameters = {p1};
-        Method* expectedMethod2 = new Method();
-        expectedMethod2->returnType = "Void";
-        expectedMethod2->methodName = "method2";
-        expectedMethod2->parameters = {p1};
-        expectedResult["B"] = {expectedMethod1, expectedMethod3};
-        expectedResult["C"] = {expectedMethod2};
+        expectedResult["B"] = {new Method("Void", "method1", {}), new Method("Void", "method3", {})};
+        expectedResult["C"] = {new Method("Void", "method2", {})};
 
-        QTest::newRow("MultipleMethodsOverriddenInOneClass") << inheritanceMatrix << classes << "D" << "A" << "Null" << QList<QString>{"B", "C"} << expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "C");
+
+        QTest::newRow("MultipleMethodsOverriddenInOneClass") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
     }
 
     // Тест 5: переопределение происходит и в промежуточном классе, и в bottom
@@ -263,56 +133,22 @@ void TestCollectOverridden::testCollectOverridden_data()
             {"A", {}}
         };
 
+        Parameter pTest5("int", "a");
+
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method = new Method();
-        method->returnType = "Void";
-        method->methodName = "method";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "count";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        method->parameters = {p1};
-        a->methods.append(method);
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-        Method* methodB = new Method();
-        methodB->returnType = "Void";
-        methodB->methodName = "method";
-        methodB->parameters = {p1};
-        b->methods.append(methodB);
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C";
-        Method* methodD = new Method();
-        methodD->returnType = "Void";
-        methodD->methodName = "method";
-        methodD->parameters = {p1};
-        d->methods.append(methodD);
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
+        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {pTest5})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("Void", "method", {pTest5})}));
+        classes.insert("C", new Class("C", {"A"}));
+        classes.insert("D", new Class("D", {"B", "C"}, {new Method("Void", "method", {pTest5})}));
 
         MethodMap expectedResult;
-        Method* expectedMethod = new Method();
-        expectedMethod->returnType = "Void";
-        expectedMethod->methodName = "method";
-        expectedMethod->parameters = {p1};
-        expectedResult["B"] = {expectedMethod};
+        expectedResult["B"] = {new Method("Void", "method", {pTest5})};
 
-        QTest::newRow("OverriddenInIntermediateAndBottom") << inheritanceMatrix << classes << "D" << "A" << "Null" << QList<QString>{"B", "C"} << expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "C");
+
+        QTest::newRow("OverriddenInIntermediateAndBottom") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
     }
 
     // Тест 6: отсутствие intermediates
@@ -323,30 +159,13 @@ void TestCollectOverridden::testCollectOverridden_data()
         };
 
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method = new Method();
-        method->returnType = "Void";
-        method->methodName = "method";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "count";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        method->parameters = {p1};
-        a->methods.append(method);
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "A";
-
-        classes.insert("A", a);
-        classes.insert("D", d);
+        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {})}));
+        classes.insert("D", new Class("D", {"A"}));
 
         MethodMap expectedResult;
+        IntermediatesMap intermediates;
 
-        QTest::newRow("NoIntermediates") << inheritanceMatrix << classes << "D" << "A" << "Null" << QList<QString>{} << expectedResult;
+        QTest::newRow("NoIntermediates") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
     }
 
     // Тест 7: переопределение в прямой цепи наследования (не в первой точке слияния)
@@ -359,45 +178,17 @@ void TestCollectOverridden::testCollectOverridden_data()
         };
 
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method = new Method();
-        method->returnType = "Void";
-        method->methodName = "method";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "count";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        method->parameters = {p1};
-        a->methods.append(method);
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-        Method* methodB = new Method();
-        methodB->returnType = "Void";
-        methodB->methodName = "method";
-        methodB->parameters = {p1};
-        b->methods.append(methodB);
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "B";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "C";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
+        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("Void", "method", {})}));
+        classes.insert("C", new Class("C", {"B"}, {new Method("Void", "count", {})}));
+        classes.insert("D", new Class("D", {"C"}));
 
         MethodMap expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "C");
+        intermediates.insert(2, "B");
 
-        QTest::newRow("OverriddenInDirectChainNotMergePoint") << inheritanceMatrix << classes << "D" << "A" << "C" << QList<QString>{"C", "B"} << expectedResult;
+        QTest::newRow("OverriddenInDirectChainNotMergePoint") << inheritanceMatrix << classes << "D" << "A" << "C" << intermediates << expectedResult;
     }
 
     // Тест 8: переопределение в прямой цепи наследования (в первой точке слияния)
@@ -410,45 +201,17 @@ void TestCollectOverridden::testCollectOverridden_data()
         };
 
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method = new Method();
-        method->returnType = "Void";
-        method->methodName = "method";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "count";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        method->parameters = {p1};
-        a->methods.append(method);
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "B";
-        Method* methodC = new Method();
-        methodC->returnType = "Void";
-        methodC->methodName = "method";
-        methodC->parameters = {p1};
-        c->methods.append(methodC);
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "C";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
+        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {})}));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"B"}, {new Method("Void", "method", {})}));
+        classes.insert("D", new Class("D", {"C"}));
 
         MethodMap expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "C");
+        intermediates.insert(2, "B");
 
-        QTest::newRow("OverriddenInDirectChainInMergePoint") << inheritanceMatrix << classes << "D" << "A" << "C" << QList<QString>{"C", "B"} << expectedResult;
+        QTest::newRow("OverriddenInDirectChainInMergePoint") << inheritanceMatrix << classes << "D" << "A" << "C" << intermediates << expectedResult;
     }
 
     // Тест 9: переопределение в точке слияния, являющейся прямым предком bottom
@@ -462,50 +225,19 @@ void TestCollectOverridden::testCollectOverridden_data()
         };
 
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method = new Method();
-        method->returnType = "Void";
-        method->methodName = "method";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "count";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        method->parameters = {p1};
-        a->methods.append(method);
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C";
-        Method* methodD = new Method();
-        methodD->returnType = "Void";
-        methodD->methodName = "method";
-        methodD->parameters = {p1};
-        d->methods.append(methodD);
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "D";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
+        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {p1})}));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"A"}, {new Method("Void", "count", {p1})}));
+        classes.insert("D", new Class("D", {"B", "C"}, {new Method("Void", "method", {p1})}));
+        classes.insert("E", new Class("E", {"D"}));
 
         MethodMap expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "D");
+        intermediates.insert(2, "B");
+        intermediates.insert(2, "C");
 
-        QTest::newRow("OverriddenInMergePointDirectAncestor") << inheritanceMatrix << classes << "E" << "A" << "D" << QList<QString>{"D", "B", "C"} << expectedResult;
+        QTest::newRow("OverriddenInMergePointDirectAncestor") << inheritanceMatrix << classes << "E" << "A" << "D" << intermediates << expectedResult;
     }
 
     // Тест 10: переопределение в предках точки слияния, являющейся прямым предком bottom
@@ -519,50 +251,19 @@ void TestCollectOverridden::testCollectOverridden_data()
         };
 
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method = new Method();
-        method->returnType = "Void";
-        method->methodName = "method";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "count";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        method->parameters = {p1};
-        a->methods.append(method);
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-        Method* methodC = new Method();
-        methodC->returnType = "Void";
-        methodC->methodName = "method";
-        methodC->parameters = {p1};
-        c->methods.append(methodC);
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B" << "C";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "D";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
+        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {})}));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"A"}, {new Method("Void", "method", {})}));
+        classes.insert("D", new Class("D", {"B", "C"}));
+        classes.insert("E", new Class("E", {"D"}));
 
         MethodMap expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "D");
+        intermediates.insert(2, "B");
+        intermediates.insert(2, "C");
 
-        QTest::newRow("OverriddenInAncestorsOfMergePoint") << inheritanceMatrix << classes << "E" << "A" << "D" << QList<QString>{"D", "B", "C"} << expectedResult;
+        QTest::newRow("OverriddenInAncestorsOfMergePoint") << inheritanceMatrix << classes << "E" << "A" << "D" << intermediates << expectedResult;
     }
 
     // Тест 11: переопределение в точке слияния, являющейся прямым потомком top
@@ -575,51 +276,22 @@ void TestCollectOverridden::testCollectOverridden_data()
             {"A", {}}
         };
 
+        Parameter pTest11("QString", "a");
+
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method = new Method();
-        method->returnType = "Void";
-        method->methodName = "method";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "count";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        method->parameters = {p1};
-        a->methods.append(method);
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-        Method* methodB = new Method();
-        methodB->returnType = "Void";
-        methodB->methodName = "method";
-        methodB->parameters = {p1};
-        b->methods.append(methodB);
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors = {"B"};
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors = {"B"};
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors = {"C", "D"};
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
+        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {pTest11})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("Void", "method", {pTest11})}));
+        classes.insert("C", new Class("C", {"B"}));
+        classes.insert("D", new Class("D", {"B"}));
+        classes.insert("E", new Class("E", {"C", "D"}));
 
         MethodMap expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "C");
+        intermediates.insert(1, "D");
+        intermediates.insert(2, "B");
 
-        QTest::newRow("OverriddenInMergePointDirectDescendant") << inheritanceMatrix << classes << "E" << "A" << "B" << QList<QString>{"C", "D", "B"} << expectedResult;
+        QTest::newRow("OverriddenInMergePointDirectDescendant") << inheritanceMatrix << classes << "E" << "A" << "B" << intermediates << expectedResult;
     }
 
     // Тест 12: переопределение потомком точки слияния, являющейся прямым потомком top
@@ -632,56 +304,26 @@ void TestCollectOverridden::testCollectOverridden_data()
             {"A", {}}
         };
 
+        Parameter pTest12("QString", "a");
+        Parameter pTest12ForD1("int", "a");
+        Parameter pTest12ForD2("int", "b");
+
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method = new Method();
-        method->returnType = "Void";
-        method->methodName = "method";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "count";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        method->parameters = {p1};
-        a->methods.append(method);
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "B";
-        Method* methodC = new Method();
-        methodC->returnType = "Void";
-        methodC->methodName = "method";
-        methodC->parameters = {p1};
-        c->methods.append(methodC);
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "C" << "D";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
+        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {pTest12})}));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"B"}, {new Method("Void", "method", {pTest12})}));
+        classes.insert("D", new Class("D", {"B"}, {new Method("int", "count", {pTest12ForD1, pTest12ForD2})}));
+        classes.insert("E", new Class("E", {"C", "D"}));
 
         MethodMap expectedResult;
-        Method* expectedMethod = new Method();
-        expectedMethod->returnType = "Void";
-        expectedMethod->methodName = "method";
-        expectedMethod->parameters = {p1};
-        expectedResult["C"] = {expectedMethod};
+        expectedResult["C"] = {new Method("Void", "method", {pTest12})};
 
-        QTest::newRow("OverriddenInDescendantOfMergePoint") << inheritanceMatrix << classes << "E" << "A" << "B" << QList<QString>{"C", "D", "B"} << expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "C");
+        intermediates.insert(1, "D");
+        intermediates.insert(2, "B");
+
+        QTest::newRow("OverriddenInDescendantOfMergePoint") << inheritanceMatrix << classes << "E" << "A" << "B" << intermediates << expectedResult;
     }
 
     // Тест 13: переопределение в двух точках слияния
@@ -695,61 +337,27 @@ void TestCollectOverridden::testCollectOverridden_data()
             {"A", {}}
         };
 
+        Parameter pTest13ForC1("float", "a");
+        Parameter pTest13For2("int", "b");
+        Parameter pTest13ForD1("int", "a");
+
+
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method = new Method();
-        method->returnType = "Void";
-        method->methodName = "method";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "count";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        method->parameters = {p1};
-        a->methods.append(method);
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-        Method* methodB = new Method();
-        methodB->returnType = "Void";
-        methodB->methodName = "method";
-        methodB->parameters = {p1};
-        b->methods.append(methodB);
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "B";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors << "C" << "D";
-        Method* methodE = new Method();
-        methodE->returnType = "Void";
-        methodE->methodName = "method";
-        methodE->parameters = {p1};
-        e->methods.append(methodE);
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors << "E";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-        classes.insert("F", f);
+        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("Void", "method", {})}));
+        classes.insert("C", new Class("C", {"B"}, {new Method("QString", "sum", {pTest13ForC1, pTest13For2})}));
+        classes.insert("D", new Class("D", {"B"}, {new Method("int", "count", {pTest13ForD1, pTest13For2})}));
+        classes.insert("E", new Class("E", {"C", "D"}, {new Method("Void", "method", {})}));
+        classes.insert("F", new Class("F", {"E"}));
 
         MethodMap expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "E");
+        intermediates.insert(2, "C");
+        intermediates.insert(2, "D");
+        intermediates.insert(3, "B");
 
-        QTest::newRow("OverriddenInTwoMergePoints") << inheritanceMatrix << classes << "F" << "A" << "E" << QList<QString>{"E", "C", "D", "B"} << expectedResult;
+        QTest::newRow("OverriddenInTwoMergePoints") << inheritanceMatrix << classes << "F" << "A" << "E" << intermediates << expectedResult;
     }
 
     // Тест 14: переопределение в потомках обеих точек слияния
@@ -765,76 +373,30 @@ void TestCollectOverridden::testCollectOverridden_data()
             {"A", {}}
         };
 
+        Parameter pTest14("float", "a");
+
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method = new Method();
-        method->returnType = "Void";
-        method->methodName = "method";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "count";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        method->parameters = {p1};
-        a->methods.append(method);
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "B";
-        Method* methodC = new Method();
-        methodC->returnType = "Void";
-        methodC->methodName = "method";
-        methodC->parameters = {p1};
-        c->methods.append(methodC);
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors = {"C", "D"};
-
-        Class* g = new Class();
-        g->className = "G";
-        g->directAncestors << "E";
-
-        Class* h = new Class();
-        h->className = "H";
-        h->directAncestors << "E";
-        Method* methodH = new Method();
-        methodH->returnType = "Void";
-        methodH->methodName = "method";
-        methodH->parameters = {p1};
-        h->methods.append(methodH);
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors = {"H", "G"};
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-        classes.insert("G", g);
-        classes.insert("H", h);
-        classes.insert("F", f);
+        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {pTest14})}));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"B"}, {new Method("Void", "method", {pTest14})}));
+        classes.insert("D", new Class("D", {"B"}));
+        classes.insert("E", new Class("E", {"C", "D"}));
+        classes.insert("G", new Class("G", {"E"}));
+        classes.insert("H", new Class("H", {"E"}, {new Method("Void", "method", {pTest14})}));
+        classes.insert("F", new Class("F", {"H", "G"}));
 
         MethodMap expectedResult;
-        Method* expected = new Method();
-        expected->returnType = "Void";
-        expected->methodName = "method";
-        expected->parameters = {p1};
-        expectedResult["H"] = {expected};
+        expectedResult["H"] = {new Method("Void", "method", {pTest14})};
 
-        QTest::newRow("OverriddenInDescendantsOfTwoMergePoints") << inheritanceMatrix << classes << "F" << "A" << "E" << QList<QString>{"H", "G", "E", "C", "D", "B"} << expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "H");
+        intermediates.insert(1, "G");
+        intermediates.insert(2, "E");
+        intermediates.insert(3, "C");
+        intermediates.insert(3, "D");
+        intermediates.insert(4, "B");
+
+        QTest::newRow("OverriddenInDescendantsOfTwoMergePoints") << inheritanceMatrix << classes << "F" << "A" << "E" << intermediates << expectedResult;
     }
 
     // Тест 15: переопределение в одной из потенциальных точек слияния, которую можно пройти в обход
@@ -850,69 +412,33 @@ void TestCollectOverridden::testCollectOverridden_data()
             {"A", {}}
         };
 
+        Parameter pTest15("float", "a");
+
+        Parameter pTest15ForH1("int", "a");
+        Parameter pTest15ForH2("int", "b");
+
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method = new Method();
-        method->returnType = "Void";
-        method->methodName = "method";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "count";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        method->parameters = {p1};
-        a->methods.append(method);
+        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {pTest15})}));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"B"}, {new Method("Void", "count", {pTest15})}));
+        classes.insert("D", new Class("D", {"B"}));
+        classes.insert("E", new Class("E", {"C", "D"}, {new Method("Void", "method", {pTest15})}));
+        classes.insert("G", new Class("G", {"E"}));
+        classes.insert("H", new Class("H", {"E"}, {new Method("Void", "findMax", {pTest15ForH1, pTest15ForH2})}));
+        classes.insert("F", new Class("F", {"B", "H", "G"}));
 
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "B";
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors = {"C", "D"};
-        Method* methodE = new Method();
-        methodE->returnType = "Void";
-        methodE->methodName = "method";
-        methodE->parameters = {p1};
-        e->methods.append(methodE);
-
-        Class* g = new Class();
-        g->className = "G";
-        g->directAncestors << "E";
-
-        Class* h = new Class();
-        h->className = "H";
-        h->directAncestors << "E";
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors = {"B", "H", "G"};
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-        classes.insert("G", g);
-        classes.insert("H", h);
         MethodMap expectedResult;
-        Method* expected = new Method();
-        expected->returnType = "Void";
-        expected->methodName = "method";
-        expected->parameters = {p1};
-        expectedResult["E"] = {expected};
+        expectedResult["E"] = {new Method("Void", "method", {pTest15})};
 
-        QTest::newRow("OverriddenInBypassableMergePoint") << inheritanceMatrix << classes << "F" << "A" << "B" << QList<QString>{"B", "H", "G", "E", "C", "D"} << expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "H");
+        intermediates.insert(1, "G");
+        intermediates.insert(2, "E");
+        intermediates.insert(3, "C");
+        intermediates.insert(3, "D");
+        intermediates.insert(1, "B");
+
+        QTest::newRow("OverriddenInBypassableMergePoint") << inheritanceMatrix << classes << "F" << "A" << "B" << intermediates << expectedResult;
     }
 
     // Тест 16: переопределение и в потомках и в предках потенциальной точки слияния, которую можно пройти в обход
@@ -928,81 +454,34 @@ void TestCollectOverridden::testCollectOverridden_data()
             {"A", {}}
         };
 
+        Parameter pTest16("float", "a");
+
+        Parameter pTest16ForE1("int", "a");
+        Parameter pTest16ForE2("int", "b");
+
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method = new Method();
-        method->returnType = "Void";
-        method->methodName = "method";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "count";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        method->parameters = {p1};
-        a->methods.append(method);
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "B";
-        Method* methodC = new Method();
-        methodC->returnType = "Void";
-        methodC->methodName = "method";
-        methodC->parameters = {p1};
-        c->methods.append(methodC);
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors = {"C", "D"};
-
-        Class* g = new Class();
-        g->className = "G";
-        g->directAncestors << "E";
-
-        Class* h = new Class();
-        h->className = "H";
-        h->directAncestors << "E";
-        Method* methodH = new Method();
-        methodH->returnType = "Void";
-        methodH->methodName = "method";
-        methodH->parameters = {p1};
-        h->methods.append(methodH);
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors = {"B", "H", "G"};
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-        classes.insert("G", g);
-        classes.insert("H", h);
-        classes.insert("F", f);
+        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {pTest16})}));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"B"}, {new Method("Void", "method", {pTest16})}));
+        classes.insert("D", new Class("D", {"B"}));
+        classes.insert("E", new Class("E", {"C", "D"}, {new Method("Void", "findMax", {pTest16ForE1, pTest16ForE2})}));
+        classes.insert("G", new Class("G", {"E"}));
+        classes.insert("H", new Class("H", {"E"}, {new Method("Void", "method", {pTest16})}));
+        classes.insert("F", new Class("F", {"B", "H", "G"}));
 
         MethodMap expectedResult;
-        Method* expectedMethodC = new Method();
-        expectedMethodC->returnType = "Void";
-        expectedMethodC->methodName = "method";
-        expectedMethodC->parameters = {p1};
-        Method* expectedMethodH = new Method();
-        expectedMethodH->returnType = "Void";
-        expectedMethodH->methodName = "method";
-        expectedMethodH->parameters = {p1};
-        expectedResult["C"] = {expectedMethodC};
-        expectedResult["H"] = {expectedMethodH};
+        expectedResult["C"] = {new Method("Void", "method", {pTest16})};
+        expectedResult["H"] = {new Method("Void", "method", {pTest16})};
 
-        QTest::newRow("OverriddenInAncestorsAndDescendantsOfBypassableMergePoint") << inheritanceMatrix << classes << "F" << "A" << "B" << QList<QString>{"B", "H", "G", "E", "C", "D"} << expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "H");
+        intermediates.insert(1, "G");
+        intermediates.insert(2, "E");
+        intermediates.insert(3, "C");
+        intermediates.insert(3, "D");
+        intermediates.insert(1, "B");
+
+        QTest::newRow("OverriddenInAncestorsAndDescendantsOfBypassableMergePoint") << inheritanceMatrix << classes << "F" << "A" << "B" << intermediates << expectedResult;
     }
 
     // Тест 17: переопределение в одном из двух ромбов, связанных друг с другом
@@ -1016,64 +495,33 @@ void TestCollectOverridden::testCollectOverridden_data()
             {"A", {}}
         };
 
+        Parameter pTest17("float", "a");
+
+        Parameter pTest17For1("int", "a");
+        Parameter pTest17ForE2("int", "b");
+
+
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method = new Method();
-        method->returnType = "Void";
-        method->methodName = "method";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "count";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        method->parameters = {p1};
-        a->methods.append(method);
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-        Method* methodC = new Method();
-        methodC->returnType = "Void";
-        methodC->methodName = "method";
-        methodC->parameters = {p1};
-        c->methods.append(methodC);
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors = {"B", "C"};
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors = {"D", "E"};
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-        classes.insert("F", f);
+        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {pTest17})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("Void", "count", {pTest17For1})}));
+        classes.insert("C", new Class("C", {"A"}, {new Method("Void", "method", {pTest17})}));
+        classes.insert("D", new Class("D", {"B"}));
+        classes.insert("E", new Class("E", {"B", "C"}, {new Method("Void", "findMax", {pTest17For1, pTest17ForE2})}));
+        classes.insert("F", new Class("F", {"D", "E"}));
 
         MethodMap expectedResult;
-        Method* expectedMethod = new Method();
-        expectedMethod->returnType = "Void";
-        expectedMethod->methodName = "method";
-        expectedMethod->parameters = {p1};
-        expectedResult["C"] = {expectedMethod};
+        expectedResult["C"] = {new Method("Void", "method", {pTest17})};
 
-        QTest::newRow("OverriddenInOneOfTwoLinkedRhombuses") << inheritanceMatrix << classes << "F" << "A" << "Null" << QList<QString>{"D", "E", "B", "C"} << expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "D");
+        intermediates.insert(1, "E");
+        intermediates.insert(2, "B");
+        intermediates.insert(2, "C");
+
+        QTest::newRow("OverriddenInOneOfTwoLinkedRhombuses") << inheritanceMatrix << classes << "F" << "A" << "Null" << intermediates << expectedResult;
     }
 
-    // Тест 18: переопределеление различных методов в нескольких промежуточных классах
+    // Тест 18: переопределение различных методов в нескольких промежуточных классах
     {
         InheritanceMatrix inheritanceMatrix = {
             {"F", {"D", "E", "G", "H", "B", "C", "K", "I", "A"}},
@@ -1088,259 +536,47 @@ void TestCollectOverridden::testCollectOverridden_data()
             {"A", {}}
         };
 
-        ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method1 = new Method();
-        method1->returnType = "Void";
-        method1->methodName = "method1";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "count";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        method1->parameters = {p1};
-        Method* method2 = new Method();
-        method2->returnType = "Void";
-        method2->methodName = "method2";
-        method2->parameters = {p1};
-        Method* method3 = new Method();
-        method3->returnType = "Void";
-        method3->methodName = "method3";
-        method3->parameters = {p1};
-        a->methods.append(method1);
-        a->methods.append(method2);
-        a->methods.append(method3);
+        Parameter pTest18Count("float", "a");
+        Parameter pTest18Init("QString", "a");
 
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-        Method* method2C = new Method();
-        method2C->returnType = "Void";
-        method2C->methodName = "method2";
-        method2C->parameters = {p1};
-        c->methods.append(method2C);
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B";
-        Method* method1D = new Method();
-        method1D->returnType = "Void";
-        method1D->methodName = "method1";
-        method1D->parameters = {p1};
-        d->methods.append(method1D);
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors = {"B", "C"};
-
-        Class* g = new Class();
-        g->className = "G";
-        g->directAncestors << "I";
-
-        Class* h = new Class();
-        h->className = "H";
-        h->directAncestors << "I";
-
-        Class* i = new Class();
-        i->className = "I";
-        i->directAncestors << "A";
-
-        Class* k = new Class();
-        k->className = "K";
-        k->directAncestors << "A";
-        Method* method3K = new Method();
-        method3K->returnType = "Void";
-        method3K->methodName = "method3";
-        method3K->parameters = {p1};
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors = {"D", "E", "K", "G", "H"};
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-        classes.insert("G", g);
-        classes.insert("H", h);
-        classes.insert("I", i);
-        classes.insert("K", k);
-        classes.insert("F", f);
-
-        MethodMap expectedResult;
-        Method* expectedMethod1 = new Method();
-        expectedMethod1->returnType = "Void";
-        expectedMethod1->methodName = "method1";
-        expectedMethod1->parameters = {p1};
-        Method* expectedMethod2 = new Method();
-        expectedMethod2->returnType = "Void";
-        expectedMethod2->methodName = "method2";
-        expectedMethod2->parameters = {p1};
-        Method* expectedMethod3 = new Method();
-        expectedMethod3->returnType = "Void";
-        expectedMethod3->methodName = "method3";
-        expectedMethod3->parameters = {p1};
-        expectedResult["D"] = {expectedMethod1};
-        expectedResult["C"] = {expectedMethod2};
-        expectedResult["K"] = {expectedMethod3};
-
-        QTest::newRow("MultipleMethodsInMultipleIntermediates") << inheritanceMatrix << classes << "F" << "A" << "Null" << QList<QString>{"D", "E", "K", "G", "H", "B", "C", "I"} << expectedResult;
-    }
-
-    // Тест 19: переопределение различных методов в цепочке наследования
-    {
-        InheritanceMatrix inheritanceMatrix = {
-            {"R", {"P", "O", "K", "I", "J", "H", "F", "G", "E", "C", "D", "B", "A"}},
-            {"P", {"O", "K", "I", "J", "H", "F", "G", "E", "C", "D", "B", "A"}},
-            {"O", {"K", "I", "J", "H", "F", "G", "E", "C", "D", "B", "A"}},
-            {"K", {"I", "J", "H", "F", "G", "E", "C", "D", "B", "A"}},
-            {"I", {"H", "F", "G", "E", "C", "D", "B", "A"}},
-            {"J", {"H", "F", "G", "E", "C", "D", "B", "A"}},
-            {"H", {"F", "G", "E", "C", "D", "B", "A"}},
-            {"F", {"E", "C", "D", "B", "A"}},
-            {"G", {"E", "C", "D", "B", "A"}},
-            {"E", {"C", "D", "B", "A"}},
-            {"C", {"B", "A"}},
-            {"D", {"B", "A"}},
-            {"B", {"A"}},
-            {"A", {}}
-        };
+        Parameter pTest18For1("int", "a");
+        Parameter pTest18ForE2("int", "b");
 
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method1 = new Method();
-        method1->returnType = "Void";
-        method1->methodName = "method1";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "count";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        method1->parameters = {p1};
-        Method* method2 = new Method();
-        method2->returnType = "Void";
-        method2->methodName = "method2";
-        method2->parameters = {p1};
-        Method* method3 = new Method();
-        method3->returnType = "Void";
-        method3->methodName = "method3";
-        method3->parameters = {p1};
-        Method* method4 = new Method();
-        method4->returnType = "Void";
-        method4->methodName = "method4";
-        method4->parameters = {p1};
-        a->methods.append(method1);
-        a->methods.append(method2);
-        a->methods.append(method3);
-        a->methods.append(method4);
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "B";
-        Method* method2C = new Method();
-        method2C->returnType = "Void";
-        method2C->methodName = "method2";
-        method2C->parameters = {p1};
-        c->methods.append(method2C);
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors << "B";
-
-        Class* e = new Class();
-        e->className = "E";
-        e->directAncestors = {"C", "D"};
-
-        Class* f = new Class();
-        f->className = "F";
-        f->directAncestors << "E";
-
-        Class* g = new Class();
-        g->className = "G";
-        g->directAncestors << "E";
-        Method* method1G = new Method();
-        method1G->returnType = "Void";
-        method1G->methodName = "method1";
-        method1G->parameters = {p1};
-        g->methods.append(method1G);
-
-        Class* h = new Class();
-        h->className = "H";
-        h->directAncestors = {"F", "G"};
-
-        Class* i = new Class();
-        i->className = "I";
-        i->directAncestors << "H";
-
-        Class* j = new Class();
-        j->className = "J";
-        j->directAncestors << "H";
-
-        Class* k = new Class();
-        k->className = "K";
-        k->directAncestors = {"I", "J"};
-        Method* method3K = new Method();
-        method3K->returnType = "Void";
-        method3K->methodName = "method3";
-        method3K->parameters = {p1};
-        k->methods.append(method3K);
-
-        Class* o = new Class();
-        o->className = "O";
-        o->directAncestors << "K";
-        Method* method4O = new Method();
-        method4O->returnType = "Void";
-        method4O->methodName = "method4";
-        method4O->parameters = {p1};
-        o->methods.append(method4O);
-
-        Class* p = new Class();
-        p->className = "P";
-        p->directAncestors << "O";
-
-        Class* r = new Class();
-        r->className = "R";
-        r->directAncestors << "P";
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
-        classes.insert("E", e);
-        classes.insert("F", f);
-        classes.insert("G", g);
-        classes.insert("H", h);
-        classes.insert("I", i);
-        classes.insert("J", j);
-        classes.insert("K", k);
-        classes.insert("O", o);
-        classes.insert("P", p);
-        classes.insert("R", r);
+        classes.insert("A", new Class("A", {}, {
+                                                   new Method("int", "count", {pTest18Count}),
+                                                   new Method("Void", "method", {}),
+                                                   new Method("QList", "init", {pTest18Init})
+                                               }));
+        classes.insert("B", new Class("B", {"A"}));
+        classes.insert("C", new Class("C", {"A"}, {new Method("Void", "method", {})}));
+        classes.insert("D", new Class("D", {"B"}, {new Method("int", "count", {pTest18Count})}));
+        classes.insert("E", new Class("E", {"B", "C"}, {new Method("void", "findMax", {pTest18For1, pTest18ForE2})}));
+        classes.insert("G", new Class("G", {"I"}, {new Method("Void", "remove", {pTest18For1})}));
+        classes.insert("H", new Class("H", {"I"}));
+        classes.insert("I", new Class("I", {"A"}));
+        classes.insert("K", new Class("K", {"A"}, {new Method("QList", "init", {pTest18Init})}));
+        classes.insert("F", new Class("F", {"D", "E", "K", "G", "H"}));
 
         MethodMap expectedResult;
-        Method* expectedMethod4 = new Method();
-        expectedMethod4->returnType = "Void";
-        expectedMethod4->methodName = "method4";
-        expectedMethod4->parameters = {p1};
-        expectedResult["O"] = {expectedMethod4};
+        expectedResult["D"] = {new Method("int", "count", {pTest18Count})};
+        expectedResult["C"] = {new Method("Void", "method", {})};
+        expectedResult["K"] = {new Method("QList", "init", {pTest18Init})};
 
-        QTest::newRow("MultipleMethodsInInheritanceChain") << inheritanceMatrix << classes << "R" << "A" << "K" << QList<QString>{"O", "P", "K", "I", "J", "H", "G", "F", "E", "C", "D", "B"} << expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "D");
+        intermediates.insert(1, "E");
+        intermediates.insert(1, "K");
+        intermediates.insert(1, "G");
+        intermediates.insert(1, "H");
+        intermediates.insert(2, "B");
+        intermediates.insert(2, "C");
+        intermediates.insert(2, "I");
+
+        QTest::newRow("MultipleMethodsInMultipleIntermediates") << inheritanceMatrix << classes << "F" << "A" << "Null" << intermediates << expectedResult;
     }
 
-    // Тест 20: перегрузка метода top по возвращаемому значению
+    // Тест 19: перегрузка метода top по типу данных параметра
     {
         InheritanceMatrix inheritanceMatrix = {
             {"D", {"B", "C", "A"}},
@@ -1349,55 +585,24 @@ void TestCollectOverridden::testCollectOverridden_data()
             {"A", {}}
         };
 
+        Parameter pTest19For1("int", "a"), pTest19ForA2("int", "b"), pTest19ForC2("float", "b");
+
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method = new Method();
-        method->returnType = "int";
-        method->methodName = "method";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "a";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        Parameter p2;
-        p2.type = "int";
-        p2.name = "b";
-        p2.isConst = false;
-        p2.isReference = false;
-        p2.isPointer = false;
-        method->parameters = {p1, p2};
-        a->methods.append(method);
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-        Method* methodC = new Method();
-        methodC->returnType = "float";
-        methodC->methodName = "method";
-        methodC->parameters = {p1, p2};
-        c->methods.append(methodC);
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors = {"B", "C"};
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
+        classes.insert("A", new Class("A", {}, {new Method("int", "method", {pTest19For1, pTest19ForA2})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("float", "count", {pTest19ForC2})}));
+        classes.insert("C", new Class("C", {"A"}, {new Method("float", "method", {pTest19For1, pTest19ForC2})}));
+        classes.insert("D", new Class("D", {"B", "C"}));
 
         MethodMap expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "C");
 
-        QTest::newRow("OverloadByReturnValue") << inheritanceMatrix << classes << "D" << "A" << "" << QList<QString>{"B", "C"} << expectedResult;
+        QTest::newRow("OverloadByParameterDataType") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
     }
 
-    // Тест 21: перегрузка метода top по входному параметру
+
+    // Тест 20: перегрузка метода top по количеству параметров
     {
         InheritanceMatrix inheritanceMatrix = {
             {"D", {"B", "C", "A"}},
@@ -1406,61 +611,23 @@ void TestCollectOverridden::testCollectOverridden_data()
             {"A", {}}
         };
 
+        Parameter p1("int", "a"), p2("int", "b"), p3("int", "c"), p4("float", "b");
+
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method = new Method();
-        method->returnType = "int";
-        method->methodName = "method";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "a";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        Parameter p2;
-        p2.type = "int";
-        p2.name = "b";
-        p2.isConst = false;
-        p2.isReference = false;
-        p2.isPointer = false;
-        method->parameters = {p1, p2};
-        a->methods.append(method);
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-        Method* methodC = new Method();
-        methodC->returnType = "int";
-        methodC->methodName = "method";
-        Parameter p2Overload;
-        p2Overload.type = "float";
-        p2Overload.name = "b";
-        p2Overload.isConst = false;
-        p2Overload.isReference = false;
-        p2Overload.isPointer = false;
-        methodC->parameters = {p1, p2Overload};
-        c->methods.append(methodC);
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors = {"B", "C"};
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
+        classes.insert("A", new Class("A", {}, {new Method("int", "method", {p1, p2})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("float", "count", {p4})}));
+        classes.insert("C", new Class("C", {"A"}, {new Method("int", "method", {p1, p2, p3})}));
+        classes.insert("D", new Class("D", {"B", "C"}));
 
         MethodMap expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "C");
 
-        QTest::newRow("OverloadByInputParameter") << inheritanceMatrix << classes << "D" << "A" << "" << QList<QString>{"B", "C"} << expectedResult;
+        QTest::newRow("OverloadByParameterCounter") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
     }
 
-    // Test 22: Overload by new parameter
+    // Тест 21: переопределение метода top по константному параметру
     {
         InheritanceMatrix inheritanceMatrix = {
             {"D", {"B", "C", "A"}},
@@ -1469,59 +636,222 @@ void TestCollectOverridden::testCollectOverridden_data()
             {"A", {}}
         };
 
+        Parameter p1("int", "a"), p2("int", "b"), p1Const("int", "c", true), p4("float", "b");
+
         ClassMap classes;
-        Class* a = new Class();
-        a->className = "A";
-        Method* method = new Method();
-        method->returnType = "int";
-        method->methodName = "method";
-        Parameter p1;
-        p1.type = "int";
-        p1.name = "a";
-        p1.isConst = false;
-        p1.isReference = false;
-        p1.isPointer = false;
-        Parameter p2;
-        p2.type = "int";
-        p2.name = "b";
-        p2.isConst = false;
-        p2.isReference = false;
-        p2.isPointer = false;
-        method->parameters = {p1, p2};
-        a->methods.append(method);
-
-        Class* b = new Class();
-        b->className = "B";
-        b->directAncestors << "A";
-
-        Class* c = new Class();
-        c->className = "C";
-        c->directAncestors << "A";
-        Method* methodC = new Method();
-        methodC->returnType = "int";
-        methodC->methodName = "method";
-        Parameter p3;
-        p3.type = "int";
-        p3.name = "c";
-        p3.isConst = false;
-        p3.isReference = false;
-        p3.isPointer = false;
-        methodC->parameters = {p1, p2, p3};
-        c->methods.append(methodC);
-
-        Class* d = new Class();
-        d->className = "D";
-        d->directAncestors = {"B", "C"};
-
-        classes.insert("A", a);
-        classes.insert("B", b);
-        classes.insert("C", c);
-        classes.insert("D", d);
+        classes.insert("A", new Class("A", {}, {new Method("int", "method", {p1, p2})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("float", "count", {p4})}));
+        classes.insert("C", new Class("C", {"A"}, {new Method("int", "method", {p1Const, p2})}));
+        classes.insert("D", new Class("D", {"B", "C"}));
 
         MethodMap expectedResult;
+        expectedResult["C"] = {new Method("int", "method", {p1Const, p2})};
 
-        QTest::newRow("OverloadByNewParameter") << inheritanceMatrix << classes << "D" << "A" << "" << QList<QString>{"B", "C"} << expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "C");
+
+        QTest::newRow("OverrideByConstParameter") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
     }
+
+    // Тест 22: перегрузка методов top по указателям и ссылкам
+    {
+        InheritanceMatrix inheritanceMatrix = {
+            {"D", {"B", "C", "A"}},
+            {"B", {"A"}},
+            {"C", {"A"}},
+            {"A", {}}
+        };
+
+        Parameter p1("int", "a"), p2("int", "b"),
+                  p1Reference("int", "a", false, false, true), p1Pointer("int", "a", false, false, false, true);
+
+        ClassMap classes;
+        classes.insert("A", new Class("A", {}, {new Method("int", "method1", {p1, p2}),
+                                                new Method("int", "method2", {p1, p2})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("int", "method2", {p1Reference, p2})}));
+        classes.insert("C", new Class("C", {"A"}, {new Method("int", "method1", {p1Pointer, p2})}));
+        classes.insert("D", new Class("D", {"B", "C"}));
+
+        MethodMap expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "C");
+
+        QTest::newRow("OverloadByPointersAndReferences") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
+    }
+
+    // Тест 23: переопределение методов top по указателям и ссылкам
+    {
+        InheritanceMatrix inheritanceMatrix = {
+            {"D", {"B", "C", "A"}},
+            {"B", {"A"}},
+            {"C", {"A"}},
+            {"A", {}}
+        };
+
+        Parameter p2("int", "b"),
+            p1Reference("int", "a", false, false, true), p1Pointer("int", "a", false, false, false, true);
+
+        ClassMap classes;
+        classes.insert("A", new Class("A", {}, {new Method("int", "method1", {p1Pointer, p2}),
+                                                new Method("int", "method2", {p1Reference, p2})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("int", "method2", {p1Reference, p2})}));
+        classes.insert("C", new Class("C", {"A"}, {new Method("int", "method1", {p1Pointer, p2})}));
+        classes.insert("D", new Class("D", {"B", "C"}));
+
+        MethodMap expectedResult;
+        expectedResult["B"] = {new Method("int", "method2", {p1Reference, p2})};
+        expectedResult["C"] = {new Method("int", "method1", {p1Pointer, p2})};
+
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "C");
+
+        QTest::newRow("OverrideByPointerdAndeReferences") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
+    }
+
+    // Тест 24: перегрузка методов top по константным указателям и ссылкам
+    {
+        InheritanceMatrix inheritanceMatrix = {
+            {"D", {"B", "C", "A"}},
+            {"B", {"A"}},
+            {"C", {"A"}},
+            {"A", {}}
+        };
+
+        Parameter p2("int", "b"),
+            p1Reference("int", "a", false, false, true), p1Pointer("int", "a", false, false, false, true),
+            p1ConstReference("int", "a", true, false, true), p1ConstPointer("int", "a", true, false, false, true);
+
+        ClassMap classes;
+        classes.insert("A", new Class("A", {}, {new Method("int", "method1", {p1Pointer, p2}),
+                                                new Method("int", "method2", {p1Reference, p2})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("int", "method2", {p1ConstReference, p2})}));
+        classes.insert("C", new Class("C", {"A"}, {new Method("int", "method1", {p1ConstPointer, p2})}));
+        classes.insert("D", new Class("D", {"B", "C"}));
+
+        MethodMap expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "C");
+
+        QTest::newRow("OverloadByConstPointersAndReferences") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
+    }
+
+    // Тест 25: переопределение метода top с параметром в виде одномерного массива
+    {
+        InheritanceMatrix inheritanceMatrix = {
+            {"D", {"B", "C", "A"}},
+            {"B", {"A"}},
+            {"C", {"A"}},
+            {"A", {}}
+        };
+
+        Parameter p1Array("int", "a", false, false, false, false, true),
+            p1Pointer("int", "a", false, false, false, true), p2("int", "b");
+
+
+        ClassMap classes;
+        classes.insert("A", new Class("A", {}, {new Method("int", "method", {p1Array, p2})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("int", "method", {p1Array, p2})}));
+        classes.insert("C", new Class("C", {"A"}, {new Method("int", "method", {p1Pointer, p2})}));
+        classes.insert("D", new Class("D", {"B", "C"}));
+
+        MethodMap expectedResult;
+        expectedResult["B"] = {new Method("int", "method", {p1Array, p2})};
+        expectedResult["C"] = {new Method("int", "method", {p1Pointer, p2})};
+
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "C");
+
+        QTest::newRow("OverrideByOneDimensionalArray") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
+    }
+
+    // Тест 26: перегрузки по применению const к указателю или типу
+    {
+        InheritanceMatrix inheritanceMatrix = {
+            {"D", {"B", "C", "A"}},
+            {"B", {"A"}},
+            {"C", {"A"}},
+            {"A", {}}
+        };
+
+        Parameter p1A("int", "a", true, true, false, true),
+            p1B("int", "a", true, false, false, true), p1C("int", "a", false, true, false, true), p2("int", "b");
+
+
+        ClassMap classes;
+        classes.insert("A", new Class("A", {}, {new Method("int", "method", {p1A})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("int", "method", {p1B, p2})}));
+        classes.insert("C", new Class("C", {"A"}, {new Method("int", "method", {p1C, p2})}));
+        classes.insert("D", new Class("D", {"B", "C"}));
+
+        MethodMap expectedResult;
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "C");
+
+        QTest::newRow("OverloadByMultiConst") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
+    }
+
+    // Тест 27: переопределение методов с параметрами в виде многомерного массива
+    {
+        InheritanceMatrix inheritanceMatrix = {
+            {"D", {"B", "C", "E", "F", "G"}},
+            {"B", {"A"}},
+            {"C", {"A"}},
+            {"E", {"A"}},
+            {"F", {"A"}},
+            {"G", {"A"}},
+            {"A", {}}
+        };
+
+        ClassMap classes;
+        // Класс A с исходными методами
+        classes.insert("A", new Class("A", {}, {
+                                                   new Method("int", "sum", {Parameter("int", "a", false, false, false, false, true, false, {-1, 10, 5, 4, 3})}),
+                                                   new Method("int", "count", {Parameter("int", "a", false, false, false, false, true, false, {-1, 3})})
+                                               }));
+        // Класс B переопределяет sum
+        classes.insert("B", new Class("B", {"A"}, {
+                           new Method("int", "sum", {Parameter("int", "sum", false, false, false, false, true, false, {-1, 10, 5, 4, 3})})
+                       }));
+        // Класс C переопределяет sum с указателем на массив
+        classes.insert("C", new Class("C", {"A"}, {
+                           new Method("int", "sum", {Parameter("int", "sum", false, false, false, false, true, true, {-1, 10, 5, 4, 3})})
+                       }));
+        // Класс E переопределяет sum с указателем на массив
+        classes.insert("E", new Class("E", {"A"}, {
+                           new Method("int", "sum", {Parameter("int", "sum", false, false, false, false, true, true, {-1, 10, 5, 8, 3})})
+                       }));
+        // Класс F переопределяет count
+        classes.insert("F", new Class("F", {"A"}, {
+                           new Method("int", "count", {Parameter("int", "count", false, false, false, false, true, false, {-1, 3})})
+                       }));
+        // Класс G переопределяет count с указателем на массив
+        classes.insert("G", new Class("G", {"A"}, {
+                           new Method("int", "count", {Parameter("int", "count", false, false, false, false, true, true, {-1, 3})})
+                       }));
+        classes.insert("D", new Class("D", {"B", "C", "E", "F", "G"}));
+
+        MethodMap expectedResult;
+        expectedResult["B"] = {new Method("int", "sum", {Parameter("int", "a", false, false, false, false, true, false, {-1, 10, 5, 4, 3})})};
+        expectedResult["C"] = {new Method("int", "sum", {Parameter("int", "a", false, false, false, false, true, true, {-1, 10, 5, 4, 3})})};
+        expectedResult["F"] = {new Method("int", "count", {Parameter("int", "a", false, false, false, false, true, false, {-1, 3})})};
+        expectedResult["G"] = {new Method("int", "count", {Parameter("int", "a", false, false, false, false, true, true, {-1, 3})})};
+
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "C");
+        intermediates.insert(1, "E");
+        intermediates.insert(1, "F");
+        intermediates.insert(1, "G");
+
+        QTest::newRow("OverriddenMethodsWithMultiDimensionalArrays") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
+    }
+
 }
 
 void TestCollectOverridden::testCollectOverridden()
@@ -1531,36 +861,30 @@ void TestCollectOverridden::testCollectOverridden()
     QFETCH(QString, bottomClass);
     QFETCH(QString, topClass);
     QFETCH(QString, mergePoint);
-    QFETCH(QList<QString>, intermediates);
+    QFETCH(IntermediatesMap, intermediates);
     QFETCH(MethodMap, expectedResult);
 
     MethodMap result = collectOverriddenMethods(bottomClass, topClass, mergePoint, intermediates, classes, inheritanceMatrix);
 
-    // Проверка размера массива
     QVERIFY2(result.size() == expectedResult.size(), qPrintable(QString("Expected result size %1, but got %2").arg(expectedResult.size()).arg(result.size())));
 
-    // Проверка ключей
     for (const QString& key : expectedResult.keys()) {
         QVERIFY2(result.contains(key), qPrintable(QString("Result does not contain expected key: %1").arg(key)));
         QVERIFY2(result[key].size() == expectedResult[key].size(), qPrintable(QString("For key %1, expected %2 methods, but got %3").arg(key).arg(expectedResult[key].size()).arg(result[key].size())));
 
-        // Проверка названий методов
         for (int i = 0; i < expectedResult[key].size(); ++i) {
             QVERIFY2(result[key][i]->methodName == expectedResult[key][i]->methodName,
                      qPrintable(QString("For key %1, expected method %2, but got %3").arg(key).arg(expectedResult[key][i]->methodName).arg(result[key][i]->methodName)));
         }
     }
 
-    // Очистка памяти
-    for (Class* cls : classes) {
-        for (Method* method : cls->methods) {
-            delete method;
-        }
-        delete cls;
-    }
+    // Очистка памяти для expectedResult
     for (const QString& key : expectedResult.keys()) {
         for (Method* method : expectedResult[key]) {
             delete method;
         }
     }
+
+    // Очистка памяти для classes (деструктор Class позаботится об освобождении методов)
+    qDeleteAll(classes);
 }
