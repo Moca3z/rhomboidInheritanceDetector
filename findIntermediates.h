@@ -7,6 +7,7 @@
 #include <QSet>
 #include "class.h"
 #include <QMultiMap>
+#include <QQueue>
 
 QMultiMap<int, QString> findIntermediates(
     QString top,

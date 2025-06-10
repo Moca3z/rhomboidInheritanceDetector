@@ -482,7 +482,25 @@ void TestFindIntermediates::testFindIntermediates()
     QFETCH(IntermediatesMap, expected);
 
     IntermediatesMap result = findIntermediates(top, bottom, inheritanceMatrix, classes);
-    QCOMPARE(result, expected);
+
+    // Получаем уникальные ключи
+    QList<int> resultKeys = result.uniqueKeys();
+    QList<int> expectedKeys = expected.uniqueKeys();
+
+    // Сравниваем наборы ключей
+    QCOMPARE(resultKeys, expectedKeys);
+
+    // Для каждого ключа сравниваем отсортированные списки значений
+    for (int key : resultKeys) {
+        QList<QString> resultValues = result.values(key);
+        QList<QString> expectedValues = expected.values(key);
+
+        // Сортируем списки для корректного сравнения
+        std::sort(resultValues.begin(), resultValues.end());
+        std::sort(expectedValues.begin(), expectedValues.end());
+
+        QCOMPARE(resultValues, expectedValues);
+    }
 
     qDeleteAll(classes);
 }
