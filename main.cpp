@@ -4,6 +4,7 @@
 #include "testcollectoverriddenmethods.h"
 #include "testdetectrhomboidinheritance.h"
 #include "testparseparameters.h"
+#include "testcheckforoverriddenparameters.h"
 
 int main(int argc, char *argv[])
 {
@@ -13,11 +14,13 @@ int main(int argc, char *argv[])
     TestCollectOverridden testsCollectOverriddenMethods;
     TestDetectRhomboid testsDetectRhomboidInheritance;
     TestParseParameters testsParseParameters;
+    TestCheckForOverriddenParameters testsCheckForOverriddenParameters;
 
     QTest::qExec(&testsFindIntermediates);
     QTest::qExec(&testsFindMergePoint);
     QTest::qExec(&testsCollectOverriddenMethods);
     QTest::qExec(&testsDetectRhomboidInheritance);
     QTest::qExec(&testsParseParameters);
+    QTest::qExec(&testsCheckForOverriddenParameters);
     //test comment
 }

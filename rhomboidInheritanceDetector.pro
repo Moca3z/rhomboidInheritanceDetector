@@ -14,6 +14,7 @@ SOURCES += \
         main.cpp \
         rhombus.cpp \
         testFindIntermediates.cpp \
+        testcheckforoverriddenparameters.cpp \
         testcollectoverriddenmethods.cpp \
         testdetectrhomboidinheritance.cpp \
         testfindmergepoint.cpp \
@@ -32,6 +33,7 @@ HEADERS += \
     findmergepoint.h \
     rhombus.h \
     testFindIntermediates.h \
+    testcheckforoverriddenparameters.h \
     testcollectoverriddenmethods.h \
     testdetectrhomboidinheritance.h \
     testfindmergepoint.h \

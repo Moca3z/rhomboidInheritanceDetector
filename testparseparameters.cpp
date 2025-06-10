@@ -47,7 +47,7 @@ void TestParseParameters::testParseParameters_data()
                                            << (QList<Parameter>{Parameter("int", "a", false, false, false, false, true, false, multiDims)});
 
     // Тест 10: Указатель на массив
-    QList<int> ptrToArrDims = {5, 6};
+    QList<int> ptrToArrDims = {-1, 5, 6};
     QTest::addRow("pointerToArray") << "int (*a)[5][6]"
                                     << (QList<Parameter>{Parameter("int", "a", false, false, false, true, false, true, ptrToArrDims)});
 

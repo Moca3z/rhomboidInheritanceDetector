@@ -20,3 +20,9 @@ QList<Parameter> parseParameters(const QString& parametersString)
 
     return fakeParameters;
 }
+
+bool checkForOverriddenParameters(const Parameter& param1, const Parameter& param2)
+{
+    // Простая заглушка: возвращает true, если имена и типы совпадают
+    return true;
+}

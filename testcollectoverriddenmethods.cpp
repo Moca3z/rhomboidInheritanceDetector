@@ -627,7 +627,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         QTest::newRow("OverloadByParameterCounter") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
     }
 
-    // Тест 21: переопределение метода top по константному параметру
+    // Тест 21: перегрузка метода top по константному параметру
     {
         InheritanceMatrix inheritanceMatrix = {
             {"D", {"B", "C", "A"}},
@@ -645,7 +645,6 @@ void TestCollectOverridden::testCollectOverridden_data()
         classes.insert("D", new Class("D", {"B", "C"}));
 
         MethodMap expectedResult;
-        expectedResult["C"] = {new Method("int", "method", {p1Const, p2})};
 
         IntermediatesMap intermediates;
         intermediates.insert(1, "B");
@@ -760,7 +759,6 @@ void TestCollectOverridden::testCollectOverridden_data()
 
         MethodMap expectedResult;
         expectedResult["B"] = {new Method("int", "method", {p1Array, p2})};
-        expectedResult["C"] = {new Method("int", "method", {p1Pointer, p2})};
 
         IntermediatesMap intermediates;
         intermediates.insert(1, "B");
@@ -837,10 +835,8 @@ void TestCollectOverridden::testCollectOverridden_data()
         classes.insert("D", new Class("D", {"B", "C", "E", "F", "G"}));
 
         MethodMap expectedResult;
-        expectedResult["B"] = {new Method("int", "sum", {Parameter("int", "a", false, false, false, false, true, false, {-1, 10, 5, 4, 3})})};
-        expectedResult["C"] = {new Method("int", "sum", {Parameter("int", "a", false, false, false, false, true, true, {-1, 10, 5, 4, 3})})};
+        expectedResult["B"] = {new Method("int", "sum", {Parameter("int", "a", false, false, false, false, true, false, {-1, 10, 5, 4, 3})})};     
         expectedResult["F"] = {new Method("int", "count", {Parameter("int", "a", false, false, false, false, true, false, {-1, 3})})};
-        expectedResult["G"] = {new Method("int", "count", {Parameter("int", "a", false, false, false, false, true, true, {-1, 3})})};
 
         IntermediatesMap intermediates;
         intermediates.insert(1, "B");

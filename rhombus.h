@@ -130,5 +130,8 @@ inline size_t qHash(const Rhombus& rhombus, size_t seed = 0) {
 
 QList<Parameter> parseParameters(const QString& parametersString);
 
+bool checkForOverriddenParameters(const Parameter& param1, const Parameter& param2);
+
+
 
 #endif // RHOMBUS_H

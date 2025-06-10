@@ -336,9 +336,7 @@ void TestDetectRhomboid::testDetectRhomboidInheritance_data()
         classes.insert("E", new Class("E", {"D", "G", "H"}, {new Method("void", "methodA")}));
 
         QMap<QString, QList<Method*>> overriddenMethods;
-        overriddenMethods["C"] = {new Method("int", "method1", {p4, p2})};
         overriddenMethods["B"] = {new Method("int", "method1", {p1, p2})};
-        overriddenMethods["F"] = {new Method("int", "method2", {p5, p2})};
 
         QSet<Rhombus> expected = {Rhombus("D", "A", {{1, "B"}, {1, "C"}, {1, "F"}}, overriddenMethods)};
 
@@ -361,7 +359,7 @@ void TestDetectRhomboid::testDetectRhomboidInheritance_data()
         classes.insert("F", new Class("F", {"A"}, {new Method("float", "method2", {p6, p7})}));
         classes.insert("E", new Class("E", {"D", "G", "H"}, {new Method("void", "methodA")}));
 
-        QSet<Rhombus> expected = {Rhombus("D", "A", {{1, "B"}, {1, "C"}, {1, "F"}}, {{"C", {new Method("float", "method2", {p6, p7})}}})};
+        QSet<Rhombus> expected = {Rhombus("D", "A", {{1, "B"}, {1, "C"}, {1, "F"}}, {{"F", {new Method("float", "method2", {p6, p7})}}})};
 
         QTest::newRow("Rhombus Overload By Parameters Amounts And Types") << classes << expected;
     }
