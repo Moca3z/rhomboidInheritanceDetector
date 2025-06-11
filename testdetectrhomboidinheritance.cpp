@@ -163,8 +163,8 @@ void TestDetectRhomboid::testDetectRhomboidInheritance_data()
         classes.insert("E", new Class("E", {"G", "K"}, {new Method("void", "methodG")}));
         classes.insert("D", new Class("D", {"C", "B", "F", "E", "H"}));
         QSet<Rhombus> expected = {
-            Rhombus("D", "A", {{1, "C"}, {1, "B"}, {2, "J"}}, {{"B", {new Method("int", "methodA", {p1, p2})}}}),
-            Rhombus("D", "G", {{1, "F"}, {1, "E"}, {2, "K"}}, {{"E", {new Method("void", "methodG")}}})
+            Rhombus("D", "A", {{1, "C"}, {1, "B"}}, {{"B", {new Method("int", "methodA", {p1, p2})}}}),
+            Rhombus("D", "G", {{1, "F"}, {1, "E"}}, {{"E", {new Method("void", "methodG")}}})
         };
         QTest::newRow("Multiple Rhombuses") << classes << expected;
     }
@@ -212,7 +212,7 @@ void TestDetectRhomboid::testDetectRhomboidInheritance_data()
         classes.insert("F", new Class("F"));
         classes.insert("G", new Class("G"));
         classes.insert("H", new Class("H"));
-        classes.insert("B", new Class("B", {"A"}, {new Method("int", "methodA", {p1, p2}), new Method("void", "methodB")}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("void", "methodB")}));
         classes.insert("C", new Class("C", {"F", "B"}));
         classes.insert("D", new Class("D", {"B", "G"}, {new Method("int", "methodA", {p1, p2}), new Method("void", "methodB")}));
         classes.insert("E", new Class("E", {"C", "D", "H"}));
@@ -294,7 +294,7 @@ void TestDetectRhomboid::testDetectRhomboidInheritance_data()
         QSet<Rhombus> expected = {
             Rhombus("B", "A", {{1, "J"}, {1, "K"}}, {{"J", {new Method("void", "methodA")}}}),
             Rhombus("F", "A", {{1, "H"}, {1, "G"}, {1, "M"}, {2, "E"}, {3, "C"}, {3, "D"}, {4, "B"}, {5, "J"}, {5, "K"}}, {{"H", {new Method("void", "methodA")}}}),
-            Rhombus("F", "J", {{1, "H"}, {1, "G"}, {1, "M"}, {2, "E"}, {3, "C"}, {3, "D"}, {4, "B"}}, {{"G", {new Method("void", "methodJ")}}}),
+            Rhombus("F", "J", {{1, "H"}, {1, "G"}, {1, "M"}, {2, "E"}, {3, "C"}, {3, "D"}, {4, "B"}}, {{"G", {new Method("void", "methodJ")}}, {"H", {new Method("void", "methodA")}}}),
             Rhombus("F", "E", {{1, "H"}, {1, "G"}, {1, "M"}}, {{"M", {new Method("void", "methodE")}}})
         };
         QTest::newRow("Chain With Multiple Merge Points") << classes << expected;
