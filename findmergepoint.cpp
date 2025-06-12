@@ -1,18 +1,59 @@
 #include "findmergepoint.h"
 
 QString findMergePoint(
-    QString& bottom,
-    QString& top,
-    QMultiMap<int, QString>& intermediates,
-    QMap<QString, QSet<QString>>& inheritanceMatrix,
-    QMap<QString, Class*>& classes
+    QString bottom,
+    QString top,
+    const QMultiMap<int, QString>& intermediates,
+    const QMap<QString, QSet<QString>>& inheritanceMatrix,
+    const QMap<QString, Class*>& classes
     ) {
-    Q_UNUSED(bottom);
-    Q_UNUSED(top);
-    Q_UNUSED(intermediates);
-    Q_UNUSED(inheritanceMatrix);
-    Q_UNUSED(classes);
+    // Уникальные глубины в порядке возрастания
+    QList<int> uniqueDepths = intermediates.uniqueKeys();
 
-    // Заглушка: всегда возвращаем некорректное значение
-    return "InvalidMergePoint";
+    for (int depth : uniqueDepths) {
+        QList<QString> classesAtDepth = intermediates.values(depth);
+
+        for (const QString& potentialMergePoint : classesAtDepth) {
+            // Находим потомков potentialMergePoint
+            QSet<QString> descendants;
+            // Напрямую проверяем bottom
+            if (inheritanceMatrix[bottom].contains(potentialMergePoint)) {
+                descendants.insert(bottom);
+            }
+            // Проверяем другие классы из intermediates
+            for (const QString& cls : intermediates.values()) {
+                if (inheritanceMatrix[cls].contains(potentialMergePoint)) {
+                    descendants.insert(cls);
+                }
+            }
+
+            // Проверяем условие для всех потомков
+            bool isMergePoint = true;
+            for (const QString& descendant : descendants) {
+                const QList<QString>& directAncestors = classes[descendant]->directAncestors;
+                for (const QString& ancestor : directAncestors) {
+                    // Сначала проверяем, равен ли ancestor top
+                    if (ancestor == top) {
+                        isMergePoint = false;
+                        break;
+                    }
+                    // Пропускаем проверку, если ancestor не в intermediates
+                    if (!intermediates.values().contains(ancestor)) {
+                        continue;
+                    }
+                    if (ancestor != potentialMergePoint && !inheritanceMatrix[ancestor].contains(potentialMergePoint)) {
+                        isMergePoint = false;
+                        break;
+                    }
+                }
+                if (!isMergePoint) break;
+            }
+
+            if (isMergePoint) {
+                return potentialMergePoint;
+            }
+        }
+    }
+
+    return "Null";
 }

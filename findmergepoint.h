@@ -8,11 +8,11 @@
 #include "class.h"
 
 QString findMergePoint(
-    QString& bottom,
-    QString& top,
-    QMultiMap<int, QString>& intermediates,
-    QMap<QString, QSet<QString>>& inheritanceMatrix,
-    QMap<QString, Class*>& classes
+    QString bottom,
+    QString top,
+    const QMultiMap<int, QString>& intermediates,
+    const QMap<QString, QSet<QString>>& inheritanceMatrix,
+    const QMap<QString, Class*>& classes
     );
 
 #endif // FIND_MERGE_POINT_H
