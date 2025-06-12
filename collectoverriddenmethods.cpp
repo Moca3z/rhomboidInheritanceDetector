@@ -1,4 +1,5 @@
 #include "collectoverriddenmethods.h"
+#include "rhombus.h"
 
 QMap<QString, QList<Method*>> collectOverriddenMethods(
     QString bottom,
@@ -8,21 +9,59 @@ QMap<QString, QList<Method*>> collectOverriddenMethods(
     QMap<QString, Class*> classes,
     QMap<QString, QSet<QString>> inheritanceMatrix
     ) {
-    Q_UNUSED(bottom);
-    Q_UNUSED(top);
-    Q_UNUSED(mergePoint);
-    Q_UNUSED(intermediates);
-    Q_UNUSED(classes);
-    Q_UNUSED(inheritanceMatrix);
+    QMap<QString, QList<Method*>> overriddenMethods;
+    QList<QString> ancestorsBeforeMergePoint;
 
-    // Заглушка в виде неверных данных
-    QMap<QString, QList<Method*>> wrongResult;
+    Class* topClass = classes[top];
 
-    Method* fakeMethod1 = new Method();
+    // Шаг 1: Определение классов для проверки (предки до точки слияния или все промежуточные)
+    if (!mergePoint.isEmpty() && mergePoint != "Null") {
+        for (const QString& candidate : intermediates) {
+            if (inheritanceMatrix[candidate].contains(mergePoint)) {
+                ancestorsBeforeMergePoint.append(candidate);
+            }
+        }
+    } else {
+        // Если точки слияния нет, включаем все промежуточные классы
+        ancestorsBeforeMergePoint = intermediates.values();
+    }
 
-    fakeMethod1->methodName = "FAKE_METHOD_1";
+    // Шаг 2: Проверка каждого кандидатского класса на переопределенные методы
+    for (const QString& candidate : ancestorsBeforeMergePoint) {
+        if (!classes.contains(candidate) || !classes.contains(top)) {
+            continue; // Пропускаем, если классы отсутствуют в карте
+        }
 
-    wrongResult["WrongClass1"] = {fakeMethod1};
+        Class* candidateClass = classes[candidate];
 
-    return wrongResult;
+
+        // Шаг 3: Сравнение методов кандидатского класса с верхним классом
+        for (Method* candidateMethod : candidateClass->methods) {
+            for (Method* topMethod : topClass->methods) {
+                // Проверка совпадения имен методов
+                if (candidateMethod->methodName == topMethod->methodName) {
+                    // Проверка совпадения типов возвращаемого значения
+                    if (candidateMethod->returnType == topMethod->returnType) {
+                        // Проверка одинаковой длины списков параметров
+                        if (candidateMethod->parameters.size() == topMethod->parameters.size()) {
+                            bool parametersMatch = true;
+                            // Сравнение каждого параметра с помощью checkForOverriddenParameters
+                            for (int i = 0; i < candidateMethod->parameters.size(); ++i) {
+                                if (!checkForOverriddenParameters(candidateMethod->parameters[i], topMethod->parameters[i])) {
+                                    parametersMatch = false;
+                                    break;
+                                }
+                            }
+                            // Если все параметры совпадают, это переопределение
+                            if (parametersMatch) {
+                                overriddenMethods[candidate].append(candidateMethod);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return overriddenMethods;
 }

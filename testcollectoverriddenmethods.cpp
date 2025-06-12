@@ -40,7 +40,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("NoOverriddenMethods") << inheritanceMatrix << classes << "A" << "B" << "Null" << intermediates << expectedResult;
+        QTest::newRow("NoOverriddenMethods") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
     }
 
     // Тест 2: переопределение есть только в классе bottom
@@ -598,7 +598,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("OverloadByParameterDataType") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
+        QTest::newRow("OverloadByParameterDataType") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
     }
 
 
@@ -624,10 +624,10 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("OverloadByParameterCounter") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
+        QTest::newRow("OverloadByParameterCounter") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
     }
 
-    // Тест 21: перегрузка метода top по константному параметру
+    // Тест 21: переопределение метода top по константному параметру
     {
         InheritanceMatrix inheritanceMatrix = {
             {"D", {"B", "C", "A"}},
@@ -647,10 +647,12 @@ void TestCollectOverridden::testCollectOverridden_data()
         MethodMap expectedResult;
 
         IntermediatesMap intermediates;
+        expectedResult["C"] = {new Method("int", "method", {p1Const, p2})};
+
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("OverrideByConstParameter") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
+        QTest::newRow("OverrideByConstParameter") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
     }
 
     // Тест 22: перегрузка методов top по указателям и ссылкам
@@ -677,7 +679,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("OverloadByPointersAndReferences") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
+        QTest::newRow("OverloadByPointersAndReferences") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
     }
 
     // Тест 23: переопределение методов top по указателям и ссылкам
@@ -707,7 +709,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("OverrideByPointerdAndeReferences") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
+        QTest::newRow("OverrideByPointerdAndeReferences") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
     }
 
     // Тест 24: перегрузка методов top по константным указателям и ссылкам
@@ -735,7 +737,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("OverloadByConstPointersAndReferences") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
+        QTest::newRow("OverloadByConstPointersAndReferences") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
     }
 
     // Тест 25: переопределение метода top с параметром в виде одномерного массива
@@ -764,7 +766,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("OverrideByOneDimensionalArray") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
+        QTest::newRow("OverrideByOneDimensionalArray") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
     }
 
     // Тест 26: перегрузки по применению const к указателю или типу
@@ -791,7 +793,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("OverloadByMultiConst") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
+        QTest::newRow("OverloadByMultiConst") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
     }
 
     // Тест 27: переопределение методов с параметрами в виде многомерного массива
@@ -807,28 +809,22 @@ void TestCollectOverridden::testCollectOverridden_data()
         };
 
         ClassMap classes;
-        // Класс A с исходными методами
         classes.insert("A", new Class("A", {}, {
                                                    new Method("int", "sum", {Parameter("int", "a", false, false, false, false, true, false, {-1, 10, 5, 4, 3})}),
                                                    new Method("int", "count", {Parameter("int", "a", false, false, false, false, true, false, {-1, 3})})
                                                }));
-        // Класс B переопределяет sum
         classes.insert("B", new Class("B", {"A"}, {
                            new Method("int", "sum", {Parameter("int", "sum", false, false, false, false, true, false, {-1, 10, 5, 4, 3})})
                        }));
-        // Класс C переопределяет sum с указателем на массив
         classes.insert("C", new Class("C", {"A"}, {
                            new Method("int", "sum", {Parameter("int", "sum", false, false, false, false, true, true, {-1, 10, 5, 4, 3})})
                        }));
-        // Класс E переопределяет sum с указателем на массив
         classes.insert("E", new Class("E", {"A"}, {
                            new Method("int", "sum", {Parameter("int", "sum", false, false, false, false, true, true, {-1, 10, 5, 8, 3})})
                        }));
-        // Класс F переопределяет count
         classes.insert("F", new Class("F", {"A"}, {
                            new Method("int", "count", {Parameter("int", "count", false, false, false, false, true, false, {-1, 3})})
                        }));
-        // Класс G переопределяет count с указателем на массив
         classes.insert("G", new Class("G", {"A"}, {
                            new Method("int", "count", {Parameter("int", "count", false, false, false, false, true, true, {-1, 3})})
                        }));
@@ -847,6 +843,55 @@ void TestCollectOverridden::testCollectOverridden_data()
 
         QTest::newRow("OverriddenMethodsWithMultiDimensionalArrays") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
     }
+
+    // Тест 28 - переопределение метода top по константным параметрам
+    {
+        InheritanceMatrix inheritanceMatrix = {
+            {"D", {"B", "C", "E", "F", "G"}},
+            {"B", {"A"}},
+            {"C", {"A"}},
+            {"E", {"A"}},
+            {"F", {"A"}},
+            {"G", {"A"}},
+            {"A", {}}
+        };
+
+        ClassMap classes;
+        classes.insert("A", new Class("A", {}, {
+                                                   new Method("int", "method", {Parameter("int", "a", true, false, false, true)})
+                                               }));
+        classes.insert("B", new Class("B", {"A"}, {
+                           new Method("int", "method", {Parameter("int", "method", true, false, false, true)})
+                       }));
+        classes.insert("C", new Class("C", {"A"}, {
+                           new Method("int", "method", {Parameter("int", "method", true, false, false, true)})
+                       }));
+        classes.insert("E", new Class("E", {"A"}, {
+                           new Method("int", "findMax", {Parameter("int", "a"), Parameter("int", "b")})
+                       }));
+        classes.insert("F", new Class("F", {"A"}, {
+                           new Method("int", "method", {Parameter("int", "method", false, true, false, true)})
+                       }));
+        classes.insert("G", new Class("G", {"A"}, {
+                           new Method("int", "method", {Parameter("int", "method", true, true, false, true)})
+                       }));
+        classes.insert("D", new Class("D", {"B", "C", "E", "F", "G"}));
+
+        MethodMap expectedResult;
+        expectedResult["B"] = {new Method("int", "method", {Parameter("int", "method", true, false, false, true)})};
+        expectedResult["C"] = {new Method("int", "method", {Parameter("int", "method", true, false, false, true)})};
+
+        IntermediatesMap intermediates;
+        intermediates.insert(1, "B");
+        intermediates.insert(1, "C");
+        intermediates.insert(1, "E");
+        intermediates.insert(1, "F");
+        intermediates.insert(1, "G");
+
+        QTest::newRow("OverriddenByDifferentTypesOfConsts") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
+    }
+
+
 
 }
 
