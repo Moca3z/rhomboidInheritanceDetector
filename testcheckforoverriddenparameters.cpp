@@ -28,7 +28,7 @@ void TestCheckForOverriddenParameters::testCheckForOverriddenParameters_data()
     // Тест 4: Наличие константности типа данных
     Parameter p1_4 = {"int", "a", false, false, false, false, false, false, {}};
     Parameter p2_4 = {"int", "a", true, false, false, false, false, false, {}};
-    QTest::addRow("constType") << p1_4 << p2_4 << false;
+    QTest::addRow("constType") << p1_4 << p2_4 << true;
 
     // Тест 5: Наличие указателя
     Parameter p1_5 = {"int", "a", false, false, false, false, false, false, {}};
@@ -60,20 +60,21 @@ void TestCheckForOverriddenParameters::testCheckForOverriddenParameters_data()
     Parameter p2_10 = {"int", "a", false, false, false, false, true, false, {-1}};
     QTest::addRow("array") << p1_10 << p2_10 << false;
 
-    // Тест 11: Одномерный массив с разными названиями
-    Parameter p1_11 = {"int", "a", false, false, false, false, false, false, {}};
+
+    // Тест 11: 2 одномерных массива одинакового размера
+    Parameter p1_11 = {"int", "a", false, false, false, false, true, false, {-1}};
     Parameter p2_11 = {"int", "b", false, false, false, false, true, false, {-1}};
-    QTest::addRow("differentArrayNames") << p1_11 << p2_11 << false;
+    QTest::addRow("identicalArrays") << p1_11 << p2_11 << true;
 
-    // Тест 12: 2 одномерных массива одинакового размера
-    Parameter p1_12 = {"int", "a", false, false, false, false, true, false, {-1}};
-    Parameter p2_12 = {"int", "b", false, false, false, false, true, false, {-1}};
-    QTest::addRow("identicalArrays") << p1_12 << p2_12 << true;
+    // Тест 12: 2 одномерных массива разных размеров
+    Parameter p1_12 = {"int", "a", false, false, false, false, true, false, {4}};
+    Parameter p2_12 = {"int", "b", false, false, false, false, true, false, {5}};
+    QTest::addRow("differentArraySizes") << p1_12 << p2_12 << false;
 
-    // Тест 13: 2 одномерных массива разных размеров
-    Parameter p1_13 = {"int", "a", false, false, false, false, true, false, {4}};
-    Parameter p2_13 = {"int", "b", false, false, false, false, true, false, {5}};
-    QTest::addRow("differentArraySizes") << p1_13 << p2_13 << false;
+    // Тест 13: одномерный массив и указатель
+    Parameter p1_13 = {"int", "a", false, false, false, false, true, false, {-1}};
+    Parameter p2_13 = {"int", "a", false, false, false, true, false, false, {}};
+    QTest::addRow("oneDimensionalArrayAndPointer") << p1_13 << p2_13 << false;
 
     // Тест 14: Наличие многомерного массива
     Parameter p1_14 = {"int", "a", false, false, false, false, false, false, {}};
@@ -113,7 +114,18 @@ void TestCheckForOverriddenParameters::testCheckForOverriddenParameters_data()
     // Тест 21: Константность типа данных и указателя
     Parameter p1_21 = {"int", "a", true, false, false, true, false, false, {}};
     Parameter p2_21 = {"int", "b", false, true, false, true, false, false, {}};
-    QTest::addRow("constPointer") << p1_21 << p2_21 << false;
+    QTest::addRow("constPointerAndDataType") << p1_21 << p2_21 << false;
+
+    // Тест 22: указатели на константный тип
+    Parameter p1_22 = {"int", "a", true, false, false, true, false, false, {}};
+    Parameter p2_22 = {"int", "b", true, false, false, true, false, false, {}};
+    QTest::addRow("constPointerDataTypeReversed") << p1_22 << p2_22 << true;
+
+    // Тест 23: указатель на константный тип и константный указатель
+    Parameter p1_23 = {"int", "a", true, false, false, true, false, false, {}};
+    Parameter p2_23 = {"int", "b", false, true, false, true, false, false, {}};
+    QTest::addRow("constPointerAndDataTypeReversed") << p1_23 << p2_23 << false;
+
 }
 
 void TestCheckForOverriddenParameters::testCheckForOverriddenParameters()

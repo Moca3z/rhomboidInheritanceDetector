@@ -4,8 +4,8 @@
 QMultiMap<int, QString> findIntermediates(
     QString top,
     QString bottom,
-    QMap<QString, QSet<QString>>& inheritanceMatrix,
-    QMap<QString, Class*>& classes)
+    const QMap<QString, QSet<QString>>& inheritanceMatrix,
+    const QMap<QString, Class*>& classes)
 {
     QMultiMap<int, QString> intermediates;
 

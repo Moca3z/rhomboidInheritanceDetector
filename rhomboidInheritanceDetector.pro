@@ -1,5 +1,6 @@
 QT = core
 QT += testlib core
+QT += core xml
 CONFIG += c++17 cmdline
 
 # You can make your code fail to compile if it uses deprecated APIs.
@@ -7,6 +8,7 @@ CONFIG += c++17 cmdline
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+        classdiagram.cpp \
         collectoverriddenmethods.cpp \
         detectrhomboidinheritance.cpp \
         findIntermediates.cpp \
@@ -27,8 +29,10 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     class.h \
+    classdiagram.h \
     collectoverriddenmethods.h \
     detectrhomboidinheritance.h \
+    error.h \
     findIntermediates.h \
     findmergepoint.h \
     rhombus.h \

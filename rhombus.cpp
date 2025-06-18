@@ -1,10 +1,15 @@
 // rhombus.cpp
 #include "rhombus.h"
+#include <QFile>
 
 // Функция для разбора строки параметров с использованием локальных статических регулярных выражений
 QList<Parameter> parseParameters(const QString& parametersString) {
     QList<Parameter> params;
-    QStringList decls = parametersString.split(",", Qt::SkipEmptyParts);
+
+    // Заменяем &amp; на & для корректного разбора
+    QString normalizedParams = parametersString;
+    normalizedParams.replace("&amp;", "&");
+    QStringList decls = normalizedParams.split(",", Qt::SkipEmptyParts);
 
     // Локальные статические регулярные выражения
     static const QRegularExpression standardRe(
@@ -163,3 +168,121 @@ QMap<QString, QSet<QString>> buildInheritanceMatrix(const QMap<QString, Class*>&
 
     return inheritanceMatrix;
 }
+
+
+QPair<QMap<QString, Class*>, QList<Error>> parseXmlFile(const QString& filename) {
+    QMap<QString, Class*> classes;
+    QList<Error> errors;
+
+    // 1. Открытие файла
+    QFile file(filename);
+    if (!file.open(QIODevice::ReadOnly)) {
+        errors.append({Error::FileNotFound, "", ""});
+        return {classes, errors};
+    }
+
+    // 2. Загрузка XML в QDomDocument
+    QDomDocument doc;
+    if (!doc.setContent(&file)) {
+        errors.append({Error::FileNotFound, "", ""});
+        file.close();
+        return {classes, errors};
+    }
+    file.close();
+
+    // 3. Проверка корневого тега
+    QDomElement root = doc.documentElement();
+    if (root.tagName() != "program") {
+        errors.append({Error::NoRootTag, "", ""});
+        return {classes, errors};
+    }
+
+    // 4. Обработка тегов <class>
+    QDomNodeList classNodes = root.elementsByTagName("class");
+    for (int i = 0; i < classNodes.size(); i++) {
+        QDomElement classElem = classNodes.at(i).toElement();
+
+        // Проверка атрибутов класса
+        if (!classElem.hasAttribute("className")) {
+            errors.append({Error::MissingClassName, "", ""});
+            continue;
+        }
+        QString className = classElem.attribute("className").trimmed();
+        if (className.isEmpty()) {
+            errors.append({Error::MissingClassName, "", ""});
+            continue;
+        }
+
+        if (!classElem.hasAttribute("ancestors")) {
+            errors.append({Error::MissingAncestors, className, ""});
+            continue;
+        }
+
+        if (classes.contains(className)) {
+            errors.append({Error::MissingClassName, className, ""});
+            continue;
+        }
+
+        Class* cls = new Class(className);
+        QString ancestorsStr = classElem.attribute("ancestors").trimmed();
+        if (!ancestorsStr.isEmpty()) {
+            cls->directAncestors = ancestorsStr.split(',', Qt::SkipEmptyParts);
+            for (QString& ancestor : cls->directAncestors) {
+                ancestor = ancestor.trimmed();
+            }
+        }
+
+        // 5. Обработка тегов <method>
+        QDomNodeList methodNodes = classElem.elementsByTagName("method");
+        for (int j = 0; j < methodNodes.size(); j++) {
+            QDomElement methodElem = methodNodes.at(j).toElement();
+
+            if (!methodElem.hasAttribute("virtual")) {
+                errors.append({Error::MissingVirtual, className, methodElem.attribute("methodName", "unknown")});
+                continue;
+            }
+            QString virtualStr = methodElem.attribute("virtual").trimmed().toLower();
+            if (virtualStr != "true" && virtualStr != "false") {
+                errors.append({Error::InvalidVirtual, className, methodElem.attribute("methodName", "unknown")});
+                continue;
+            }
+            bool isVirtual = (virtualStr == "true");
+
+            if (!methodElem.hasAttribute("returnType")) {
+                errors.append({Error::MissingReturnType, className, methodElem.attribute("methodName", "unknown")});
+                continue;
+            }
+            if (!methodElem.hasAttribute("methodName")) {
+                errors.append({Error::MissingMethodName, className, ""});
+                continue;
+            }
+            if (!methodElem.hasAttribute("parameters")) {
+                errors.append({Error::MissingParameters, className, methodElem.attribute("methodName", "unknown")});
+                continue;
+            }
+
+            Method* method = new Method();
+            method->isVirtual = isVirtual;
+            method->returnType = methodElem.attribute("returnType").trimmed();
+            method->methodName = methodElem.attribute("methodName").trimmed();
+
+            QString paramsStr = methodElem.attribute("parameters").trimmed();
+            if (!paramsStr.isEmpty()) {
+                method->parameters = parseParameters(paramsStr);
+                QStringList paramList = paramsStr.split(',', Qt::SkipEmptyParts);
+                if (method->parameters.size() != paramList.size()) {
+                    errors.append({Error::InvalidParameters, className, method->methodName});
+                    delete method;
+                    continue;
+                }
+            }
+
+            cls->methods.append(method);
+        }
+
+        classes[cls->className] = cls;
+    }
+
+    return {classes, errors};
+}
+

@@ -34,7 +34,7 @@ void TestParseParameters::testParseParameters_data()
                                   << (QList<Parameter>{Parameter("int", "a", false, true, false, true)});
 
     // Тест 7: Ссылка
-    QTest::addRow("reference") << "char& ref"
+    QTest::addRow("reference") << "char&amp; ref"
                                << (QList<Parameter>{Parameter("char", "ref", false, false, true)});
 
     // Тест 8: Одномерный массив
@@ -64,7 +64,7 @@ void TestParseParameters::testParseParameters_data()
                                         << (QList<Parameter>{Parameter("int", "a", true, false, false, false, true, false, {10})});
 
     // Тест 14: Ссылка на константный тип
-    QTest::addRow("referenceToConstType") << "const char& ref"
+    QTest::addRow("referenceToConstType") << "const char&amp; ref"
                                           << (QList<Parameter>{Parameter("char", "ref", true, false, true)});
 
     // Тест 15: Пустая строка
@@ -72,7 +72,7 @@ void TestParseParameters::testParseParameters_data()
                                  << (QList<Parameter>{});
 
     // Тест 16: Комбинация типов
-    QTest::addRow("combinationOfTypes") << "int* const ptr, char& ref, int a[5]"
+    QTest::addRow("combinationOfTypes") << "int* const ptr, char&amp; ref, int a[5]"
                                         << (QList<Parameter>{
                                                Parameter("int", "ptr", false, true, false, true),
                                                Parameter("char", "ref", false, false, true),
@@ -86,6 +86,10 @@ void TestParseParameters::testParseParameters_data()
     // Тест 18: Const перед типом и после указателя на массив
     QTest::addRow("constBeforeAndAfterPointerToArray") << "const int (*const a)[5][6]"
                                                        << (QList<Parameter>{Parameter("int", "a", true, true, false, true, false, true, ptrToArrDims)});
+
+    // Тест 19: Константный тип с указателем в другом порядке
+    QTest::addRow("constTypeWithPointerReverse") << "int const* a"
+                                          << (QList<Parameter>{Parameter("int", "a", true, false, false, true)});
 }
 
 void TestParseParameters::testParseParameters()
