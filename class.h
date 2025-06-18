@@ -37,10 +37,6 @@ struct Method {
            const QList<Parameter>& params = {}, bool virt = false)
         : isVirtual(virt), returnType(rt), methodName(mn), parameters(params) {}
 
-    QString getSignature() const {
-        // Реализация
-        return QString();
-    }
 };
 
 class Class {

@@ -269,12 +269,6 @@ QPair<QMap<QString, Class*>, QList<Error>> parseXmlFile(const QString& filename)
             QString paramsStr = methodElem.attribute("parameters").trimmed();
             if (!paramsStr.isEmpty()) {
                 method->parameters = parseParameters(paramsStr);
-                QStringList paramList = paramsStr.split(',', Qt::SkipEmptyParts);
-                if (method->parameters.size() != paramList.size()) {
-                    errors.append({Error::InvalidParameters, className, method->methodName});
-                    delete method;
-                    continue;
-                }
             }
 
             cls->methods.append(method);
