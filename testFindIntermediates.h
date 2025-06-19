@@ -1,9 +1,16 @@
+/*!
+* \file
+* \brief Заголовочный файл класса testFindIntermediates для тестирования функции findIntermediates.
+*/
 #ifndef TESTFINDINTERMEDIATES_H
 #define TESTFINDINTERMEDIATES_H
 
 #include <QObject>
 #include <QtTest/QtTest>
 
+/*!
+ * \brief Класс для тестирования функций
+ */
 class TestFindIntermediates : public QObject
 {
     Q_OBJECT
@@ -14,13 +21,4 @@ private slots:
 };
 
 #endif // TESTFINDINTERMEDIATES_H
-
-/*
- * \brief находит промежуточные классы между bottom и top ромба
- * \param [in] top - вершина ромба
- * \param [in] bottom - основание ромба
- * \param [in] inheritanceMatrix - матрица наследования, хранящая информацию о всех предках для каждого класса
- * \param [in] classes - набор классов, каждый из которых хранит в себе информацию о методах и родителях
- * \return набор классов между bottom и top
-*/
 

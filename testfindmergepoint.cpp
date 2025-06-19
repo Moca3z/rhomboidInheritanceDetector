@@ -1,3 +1,7 @@
+/*!
+ * \file
+ * \brief Файл содержит реализацию тестов для функции findMergePoint.
+ */
 #include "testfindmergepoint.h"
 #include "findmergepoint.h"
 #include "class.h"

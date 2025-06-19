@@ -1,3 +1,7 @@
+/*!
+ * \file
+ * \brief Файл содержит реализацию тестов для функции findIntermediates.
+ */
 #include "testfindintermediates.h"
 #include "findintermediates.h"
 #include "class.h"

@@ -1,3 +1,7 @@
+/*!
+ * \file
+ * \brief Файл содержит реализацию тестов для функции checkForOverriddenParameters.
+ */
 #include "testcheckforoverriddenparameters.h"
 #include "rhombus.h"
 #include "class.h"

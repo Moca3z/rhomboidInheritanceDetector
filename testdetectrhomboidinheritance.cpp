@@ -1,3 +1,7 @@
+/*!
+ * \file
+ * \brief Файл содержит реализацию тестов для функции detectRhomboidInheritance.
+ */
 #include "testdetectrhomboidinheritance.h"
 #include "detectrhomboidinheritance.h"
 #include "class.h"

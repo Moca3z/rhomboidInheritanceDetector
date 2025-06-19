@@ -1,3 +1,7 @@
+/*!
+* \file
+* \brief Файл содержит реализацию функции collectOverriddenMethods.
+*/
 #include "collectoverriddenmethods.h"
 #include "rhombus.h"
 

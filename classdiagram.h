@@ -1,3 +1,7 @@
+/*!
+* \file
+* \brief Заголовочный файл класса classDiagram.
+*/
 #ifndef CLASSDIAGRAM_H
 #define CLASSDIAGRAM_H
 
@@ -6,19 +10,33 @@
 #include "class.h"
 #include "rhombus.h"
 
+/*!
+ * \brief Класс для хранения информации о classDiagram.
+ */
 class ClassDiagram {
 public:
-    // Конструкторы
+
+    /*!
+     * \brief Конструктор для набора классов
+     */
     ClassDiagram(QMap<QString, Class*>& inputClasses);
+
+    /*!
+     * \brief Конструктор для объекта Rhombus
+     */
     ClassDiagram(const Rhombus& rhombus, const QMap<QString, Class*>& classes);
 
-    // Генерация DOT-файла
+    /*!
+     * \brief Функция для генерации DOT файла
+     */
     QString generateDotFile() const;
 
 private:
     QMap<QString, Class*> classes; // Контейнер классов диаграммы
 
-    // Вспомогательный метод для форматирования узла класса
+    /*!
+     * \brief Вспомогательный метод для форматирования узла класса
+     */
     QString formatClassNode(const Class* cls) const;
 };
 

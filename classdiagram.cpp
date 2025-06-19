@@ -1,3 +1,7 @@
+/*!
+* \file
+* \brief Файл содержит реализацию конструкторов и методов класса classDiagram.
+*/
 #include "classdiagram.h"
 #include <QStringBuilder>
 #include <QTextStream>

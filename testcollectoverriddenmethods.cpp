@@ -1,3 +1,7 @@
+/*!
+ * \file
+ * \brief Файл содержит реализацию тестов для функции collectOverriddenMethods.
+ */
 #include "testcollectoverriddenmethods.h"
 #include "collectoverriddenmethods.h"
 #include "class.h"

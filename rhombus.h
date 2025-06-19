@@ -1,3 +1,7 @@
+/*!
+* \file
+* \brief Заголовочный файл класса Rhombus и вспомогательных функций.
+*/
 #ifndef RHOMBUS_H
 #define RHOMBUS_H
 
@@ -15,6 +19,9 @@
 #include <QDomDocument>
 #include "error.h"
 
+/*!
+ * \brief Структура объекта Rhombus
+ */
 struct Rhombus {
     QString bottom;
     QString top;
@@ -26,7 +33,9 @@ struct Rhombus {
             const QMap<QString, QList<Method*>>& m = QMap<QString, QList<Method*>>())
         : bottom(b), top(t), intermediates(i), overriddenMethods(m) {}
 
-
+    /*!
+    * \brief Перегрузка оператора == для Rhombus
+    */
     // Полное сравнение всех полей, включая методы
     bool operator==(const Rhombus& other) const {
         // 1. Сравнение базовых полей
@@ -120,7 +129,9 @@ struct Rhombus {
     }
 };
 
-// Функция хеширования для QMultiMap<int, QString> с игнорированием порядка
+/*!
+ * \brief Функция хеширования для QMultiMap<int, QString> с игнорированием порядка
+ */
 inline size_t qHash(const QMultiMap<int, QString>& map, size_t seed = 0) {
     // Получаем уникальные ключи и сортируем их
     QList<int> keys = map.uniqueKeys();
@@ -140,7 +151,9 @@ inline size_t qHash(const QMultiMap<int, QString>& map, size_t seed = 0) {
     return seed;
 }
 
-// Функция хеширования для Rhombus
+/*!
+ * \brief Функция хеширования для Rhombus
+ */
 inline size_t qHash(const Rhombus& rhombus, size_t seed = 0) {
     seed = qHash(rhombus.bottom, seed);
     seed = qHash(rhombus.top, seed);
@@ -169,12 +182,34 @@ inline size_t qHash(const Rhombus& rhombus, size_t seed = 0) {
     return seed;
 }
 
+
+/*!
+ * \brief Разбирает строку параметров метода
+ * \param [in] parametersString - строка параметров, разделённых запятыми
+ * \return список структур Parameter, содержащих информацию о каждом параметре
+ */
 QList<Parameter> parseParameters(const QString& parametersString);
 
+/*!
+ * \brief Проверяет, является ли один параметр переопределением другого
+ * \param [in] param1 - первый параметр для сравнения
+ * \param [in] param2 - второй параметр для сравнения
+ * \return true, если param2 является переопределением param1, false в противном случае
+ */
 bool checkForOverriddenParameters(const Parameter& param1, const Parameter& param2);
 
+/*!
+ * \brief Создает матрицу наследования из набора классов
+ * \param [in] classes - набор классов
+ * \return контейнер, где для каждого класса собраны все его предки
+ */
 QMap<QString, QSet<QString>> buildInheritanceMatrix(const QMap<QString, Class*>& classes);
 
+/*!
+ * \brief Разбирает поступающий на вход xml - файл
+ * \param [in] filename - название xml файла
+ * \return контейнер, хранящий набор классов и список ошибок, если они были найдены
+ */
 QPair<QMap<QString, Class*>, QList<Error>> parseXmlFile(const QString& filename);
 
 #endif // RHOMBUS_H

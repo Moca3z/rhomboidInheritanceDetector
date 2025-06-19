@@ -1,3 +1,7 @@
+/*!
+* \file
+* \brief Файл содержит реализацию функции findMergePoint.
+*/
 #include "findmergepoint.h"
 
 QString findMergePoint(

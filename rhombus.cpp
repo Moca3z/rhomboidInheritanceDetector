@@ -1,4 +1,7 @@
-// rhombus.cpp
+/*!
+* \file
+* \brief Файл содержит реализацию функций класса rhombus.
+*/
 #include "rhombus.h"
 #include <QFile>
 

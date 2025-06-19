@@ -1,10 +1,20 @@
+/*!
+* \file
+* \brief Заголовочный файл класса Error.
+*/
 #ifndef ERROR_H
 #define ERROR_H
 
 #include <QString>
 
+/*!
+ * \brief Класс для хранения информации об ошибках.
+ */
 class Error {
 public:
+    /*!
+     * \brief Перечисление типов ошибок
+     */
     enum ErrorType {
         NoError, FileNotFound, NoRootTag, MissingClassName, MissingAncestors,
         MissingVirtual, InvalidVirtual, MissingReturnType, MissingMethodName,

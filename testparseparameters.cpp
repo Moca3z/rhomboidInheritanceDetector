@@ -1,3 +1,7 @@
+/*!
+ * \file
+ * \brief Файл содержит реализацию тестов для функции parseParameters.
+ */
 #include "testparseparameters.h"
 #include "rhombus.h"
 #include "class.h"

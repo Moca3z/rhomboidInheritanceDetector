@@ -1,3 +1,7 @@
+/*!
+* \file
+* \brief Файл содержит реализацию функции detectRhomboidInheritance.
+*/
 #include "detectrhomboidinheritance.h"
 
 

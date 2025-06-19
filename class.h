@@ -1,3 +1,7 @@
+/*!
+* \file
+* \brief Заголовочный файл класса class.
+*/
 #ifndef CLASS_H
 #define CLASS_H
 
@@ -6,6 +10,9 @@
 #include <QMap>
 #include <QSet>
 
+/*!
+ * \brief Структура параметра
+ */
 struct Parameter {
     QString type;             // Базовый тип (например, "int")
     QString name;             // Имя параметра
@@ -17,7 +24,9 @@ struct Parameter {
     bool isPointerToArray;    // Является ли указателем на массив?
     QList<int> arrayDimensions; // Размеры массива
 
-    // Конструктор
+    /*!
+    * \brief Конструктор с параметрами для Parameter
+    */
     Parameter(const QString& t = QString(), const QString& n = QString(),
               bool typeConst = false, bool ptrConst = false, bool ref = false,
               bool ptr = false, bool arr = false, bool ptrToArr = false,
@@ -27,18 +36,27 @@ struct Parameter {
         isPointerToArray(ptrToArr), arrayDimensions(dims) {}
 };
 
+/*!
+ * \brief Структура метода
+ */
 struct Method {
     bool isVirtual;
     QString returnType;
     QString methodName;
     QList<Parameter> parameters;
 
+    /*!
+    * \brief Конструктор с параметрами для Method
+    */
     Method(const QString& rt = QString(), const QString& mn = QString(),
            const QList<Parameter>& params = {}, bool virt = false)
         : isVirtual(virt), returnType(rt), methodName(mn), parameters(params) {}
 
 };
 
+/*!
+ * \brief Класс для хранения информации о классе.
+ */
 class Class {
 public:
     QString className;
@@ -46,13 +64,17 @@ public:
     QList<Method*> methods;
 
 
-    // Конструктор
+    /*!
+    * \brief Конструктор с параметрами для Class
+    */
     Class(const QString& name = QString(),
           const QStringList& ancestors = {},
           const QList<Method*>& m = {})
         : className(name), directAncestors(ancestors), methods(m) {}
 
-    // Деструктор
+    /*!
+    * \brief Деструктор для Class
+    */
     ~Class() {
         for (Method* method : methods) {
             delete method;
