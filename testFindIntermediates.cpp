@@ -486,24 +486,43 @@ void TestFindIntermediates::testFindIntermediates()
     QFETCH(IntermediatesMap, expected);
 
     IntermediatesMap result = findIntermediates(top, bottom, inheritanceMatrix, classes);
+    bool keysError = false;
+    bool valuesError = false;
 
     // Получаем уникальные ключи
     QList<int> resultKeys = result.uniqueKeys();
     QList<int> expectedKeys = expected.uniqueKeys();
 
-    // Сравниваем наборы ключей
-    QCOMPARE(resultKeys, expectedKeys);
+    // Проверка совпадения ключей
+    if (resultKeys != expectedKeys) {
+        qDebug() << "ОШИБКА: Несоответствие ключей";
+        qDebug() << "Полученные ключи:" << resultKeys;
+        qDebug() << "Ожидаемые ключи:" << expectedKeys;
+        keysError = true;
+    }
 
-    // Для каждого ключа сравниваем отсортированные списки значений
-    for (int key : resultKeys) {
+    // Проверка значений для всех ожидаемых ключей
+    for (int key : expectedKeys) {
         QList<QString> resultValues = result.values(key);
         QList<QString> expectedValues = expected.values(key);
 
-        // Сортируем списки для корректного сравнения
+        // Сортируем для сравнения
         std::sort(resultValues.begin(), resultValues.end());
         std::sort(expectedValues.begin(), expectedValues.end());
 
-        QCOMPARE(resultValues, expectedValues);
+        if (resultValues != expectedValues) {
+            qDebug() << "\nОШИБКА: Несоответствие значений для ключа" << key;
+            qDebug() << "Полученные значения:" << resultValues;
+            qDebug() << "Ожидаемые значения:" << expectedValues;
+            valuesError = true;
+        }
+    }
+
+    // Завершение теста с соответствующим сообщением
+    if (keysError && valuesError) {
+        QFAIL("keys and values mismatch!");
+    } else if (valuesError) {
+        QFAIL("values mismatch!");
     }
 
     qDeleteAll(classes);

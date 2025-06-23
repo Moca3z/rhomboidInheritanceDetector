@@ -910,26 +910,96 @@ void TestCollectOverridden::testCollectOverridden()
     QFETCH(MethodMap, expectedResult);
 
     MethodMap result = collectOverriddenMethods(bottomClass, topClass, mergePoint, intermediates, classes, inheritanceMatrix);
+    bool hasErrors = false;
 
-    QVERIFY2(result.size() == expectedResult.size(), qPrintable(QString("Expected result size %1, but got %2").arg(expectedResult.size()).arg(result.size())));
+    // Проверка размера результата
+    if (result.size() != expectedResult.size()) {
+        qDebug() << "ОШИБКА: Несоответствие количества ключей";
+        qDebug() << "Ожидалось:" << expectedResult.size() << "Получено:" << result.size();
+        hasErrors = true;
+    }
 
+    // Проверка наличия ожидаемых ключей
     for (const QString& key : expectedResult.keys()) {
-        QVERIFY2(result.contains(key), qPrintable(QString("Result does not contain expected key: %1").arg(key)));
-        QVERIFY2(result[key].size() == expectedResult[key].size(), qPrintable(QString("For key %1, expected %2 methods, but got %3").arg(key).arg(expectedResult[key].size()).arg(result[key].size())));
-
-        for (int i = 0; i < expectedResult[key].size(); ++i) {
-            QVERIFY2(result[key][i]->methodName == expectedResult[key][i]->methodName,
-                     qPrintable(QString("For key %1, expected method %2, but got %3").arg(key).arg(expectedResult[key][i]->methodName).arg(result[key][i]->methodName)));
+        if (!result.contains(key)) {
+            qDebug() << "ОШИБКА: Отсутствует ожидаемый ключ:" << key;
+            hasErrors = true;
         }
     }
 
-    // Очистка памяти для expectedResult
+    // Проверка лишних ключей
+    for (const QString& key : result.keys()) {
+        if (!expectedResult.contains(key)) {
+            qDebug() << "ОШИБКА: Найден лишний ключ:" << key;
+            hasErrors = true;
+        }
+    }
+
+    // Проверка методов для каждого ключа
+    for (const QString& key : expectedResult.keys()) {
+        if (!result.contains(key)) continue;
+
+        if (result[key].size() != expectedResult[key].size()) {
+            qDebug() << "ОШИБКА: Для ключа" << key << "несоответствие количества методов";
+            qDebug() << "Ожидалось:" << expectedResult[key].size() << "Получено:" << result[key].size();
+            hasErrors = true;
+            continue;
+        }
+
+        for (int i = 0; i < expectedResult[key].size(); ++i) {
+            const Method* expectedMethod = expectedResult[key][i];
+            const Method* actualMethod = result[key][i];
+
+            // Проверка имени метода
+            if (actualMethod->methodName != expectedMethod->methodName) {
+                qDebug() << "ОШИБКА: Для ключа" << key << "несоответствие имени метода";
+                qDebug() << "Ожидалось:" << expectedMethod->methodName
+                         << "Получено:" << actualMethod->methodName;
+                hasErrors = true;
+            }
+
+            // Проверка типа возвращаемого значения
+            if (actualMethod->returnType != expectedMethod->returnType) {
+                qDebug() << "ОШИБКА: Для метода" << key << "::" << expectedMethod->methodName
+                         << "несоответствие типа возвращаемого значения";
+                qDebug() << "Ожидалось:" << expectedMethod->returnType
+                         << "Получено:" << actualMethod->returnType;
+                hasErrors = true;
+            }
+        }
+    }
+
+    if (hasErrors) {
+        qDebug() << "\nДетализация:";
+        qDebug() << "Входные данные:";
+        qDebug() << "Класс bottom:" << bottomClass;
+        qDebug() << "Класс top:" << topClass;
+        qDebug() << "Точка слияния:" << mergePoint;
+
+        qDebug() << "\nОжидаемый результат:";
+        for (const QString& key : expectedResult.keys()) {
+            qDebug() << "Ключ:" << key;
+            for (Method* method : expectedResult[key]) {
+                qDebug() << "  Метод:" << method->methodName << "возвращает:" << method->returnType;
+            }
+        }
+
+        qDebug() << "\nФактический результат:";
+        for (const QString& key : result.keys()) {
+            qDebug() << "Ключ:" << key;
+            for (Method* method : result[key]) {
+                qDebug() << "  Метод:" << method->methodName << "возвращает:" << method->returnType;
+            }
+        }
+
+        QFAIL("compared values error!");
+    }
+
+    // Очистка памяти
     for (const QString& key : expectedResult.keys()) {
         for (Method* method : expectedResult[key]) {
             delete method;
         }
     }
-
-    // Очистка памяти для classes (деструктор Class позаботится об освобождении методов)
     qDeleteAll(classes);
 }

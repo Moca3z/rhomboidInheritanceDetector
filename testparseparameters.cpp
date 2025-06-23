@@ -102,19 +102,81 @@ void TestParseParameters::testParseParameters()
     QFETCH(QList<Parameter>, expected);
 
     QList<Parameter> result = parseParameters(input);
-    QCOMPARE(result.size(), expected.size());
+    bool countError = false;
+    bool paramsError = false;
 
-    for (int i = 0; i < result.size(); ++i) {
+    // Проверка количества параметров
+    if (result.size() != expected.size()) {
+        qDebug() << "ОШИБКА: Несоответствие количества параметров";
+        qDebug() << "Входная строка:" << input;
+        qDebug() << "Получено:" << result.size() << "Ожидалось:" << expected.size();
+        countError = true;
+    }
+
+    // Проверка каждого параметра
+    for (int i = 0; i < qMin(result.size(), expected.size()); ++i) {
         const Parameter& r = result[i];
         const Parameter& e = expected[i];
-        QCOMPARE(r.type, e.type);
-        QCOMPARE(r.name, e.name);
-        QCOMPARE(r.isTypeConst, e.isTypeConst);
-        QCOMPARE(r.isPointerConst, e.isPointerConst);
-        QCOMPARE(r.isReference, e.isReference);
-        QCOMPARE(r.isPointer, e.isPointer);
-        QCOMPARE(r.isArray, e.isArray);
-        QCOMPARE(r.isPointerToArray, e.isPointerToArray);
-        QCOMPARE(r.arrayDimensions, e.arrayDimensions);
+        bool hasMismatch = false;
+
+        if (r.type != e.type) {
+            qDebug() << "Параметр" << i+1 << "- несоответствие типа:"
+                     << "Получено:" << r.type << "Ожидалось:" << e.type;
+            hasMismatch = true;
+        }
+        if (r.name != e.name) {
+            qDebug() << "Параметр" << i+1 << "- несоответствие имени:"
+                     << "Получено:" << r.name << "Ожидалось:" << e.name;
+            hasMismatch = true;
+        }
+        if (r.isTypeConst != e.isTypeConst) {
+            qDebug() << "Параметр" << i+1 << "- несоответствие const типа:"
+                     << "Получено:" << r.isTypeConst << "Ожидалось:" << e.isTypeConst;
+            hasMismatch = true;
+        }
+        if (r.isPointerConst != e.isPointerConst) {
+            qDebug() << "Параметр" << i+1 << "- несоответствие const указателя:"
+                     << "Получено:" << r.isPointerConst << "Ожидалось:" << e.isPointerConst;
+            hasMismatch = true;
+        }
+        if (r.isReference != e.isReference) {
+            qDebug() << "Параметр" << i+1 << "- несоответствие ссылки:"
+                     << "Получено:" << r.isReference << "Ожидалось:" << e.isReference;
+            hasMismatch = true;
+        }
+        if (r.isPointer != e.isPointer) {
+            qDebug() << "Параметр" << i+1 << "- несоответствие указателя:"
+                     << "Получено:" << r.isPointer << "Ожидалось:" << e.isPointer;
+            hasMismatch = true;
+        }
+        if (r.isArray != e.isArray) {
+            qDebug() << "Параметр" << i+1 << "- несоответствие массива:"
+                     << "Получено:" << r.isArray << "Ожидалось:" << e.isArray;
+            hasMismatch = true;
+        }
+        if (r.isPointerToArray != e.isPointerToArray) {
+            qDebug() << "Параметр" << i+1 << "- несоответствие указателя на массив:"
+                     << "Получено:" << r.isPointerToArray << "Ожидалось:" << e.isPointerToArray;
+            hasMismatch = true;
+        }
+        if (r.arrayDimensions != e.arrayDimensions) {
+            qDebug() << "Параметр" << i+1 << "- несоответствие размерностей массива:"
+                     << "Получено:" << r.arrayDimensions << "Ожидалось:" << e.arrayDimensions;
+            hasMismatch = true;
+        }
+
+        if (hasMismatch) {
+            qDebug() << "Для входной строки:" << input;
+            paramsError = true;
+        }
+    }
+
+    // Завершение теста
+    if (countError && paramsError) {
+        QFAIL("params count and values error!");
+    } else if (countError) {
+        QFAIL("params count error!");
+    } else if (paramsError) {
+        QFAIL("params values error!");
     }
 }
