@@ -502,18 +502,33 @@ void TestFindIntermediates::testFindIntermediates()
     }
 
     // Проверка значений для всех ожидаемых ключей
+
+    // Первый цикл: проверка expectedKeys и поиск недостающих значений
     for (int key : expectedKeys) {
         QList<QString> resultValues = result.values(key);
         QList<QString> expectedValues = expected.values(key);
 
-        // Сортируем для сравнения
-        std::sort(resultValues.begin(), resultValues.end());
-        std::sort(expectedValues.begin(), expectedValues.end());
+        QSet<QString> missingValues = QSet<QString>(expectedValues.begin(), expectedValues.end())
+                                      - QSet<QString>(resultValues.begin(), resultValues.end());
 
-        if (resultValues != expectedValues) {
-            qDebug() << "\nОШИБКА: Несоответствие значений для ключа" << key;
-            qDebug() << "Полученные значения:" << resultValues;
-            qDebug() << "Ожидаемые значения:" << expectedValues;
+        if (!missingValues.isEmpty()) {
+            qDebug() << "\nОШИБКА: Недостающие значения для ключа" << key;
+            qDebug() << "Отсутствующие значения:" << missingValues.values();
+            valuesError = true;
+        }
+    }
+
+     // Второй цикл: проверка resultKeys и поиск лишних значений
+    for (int key : resultKeys) {
+        QList<QString> resultValues = result.values(key);
+        QList<QString> expectedValues = expected.values(key);
+
+        QSet<QString> extraValues = QSet<QString>(resultValues.begin(), resultValues.end())
+                                    - QSet<QString>(expectedValues.begin(), expectedValues.end());
+
+        if (!extraValues.isEmpty()) {
+            qDebug() << "\nОШИБКА: Лишние значения для ключа" << key;
+            qDebug() << "Лишние значения:" << extraValues.values();
             valuesError = true;
         }
     }
