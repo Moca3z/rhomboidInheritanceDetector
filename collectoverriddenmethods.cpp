@@ -19,7 +19,7 @@ QMap<QString, QList<Method*>> collectOverriddenMethods(
     Class* topClass = classes[top];
 
     // Шаг 1: Определение классов для проверки (предки до точки слияния или все промежуточные)
-    if (!mergePoint.isEmpty() && mergePoint != "Null") {
+    if (!mergePoint.isEmpty()) {
         for (const QString& candidate : intermediates) {
             if (inheritanceMatrix[candidate].contains(mergePoint)) {
                 ancestorsBeforeMergePoint.append(candidate);

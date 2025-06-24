@@ -59,5 +59,5 @@ QString findMergePoint(
         }
     }
 
-    return "Null";
+    return "";
 }

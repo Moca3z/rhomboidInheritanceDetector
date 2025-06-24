@@ -36,7 +36,7 @@ void TestFindMergePoint::testFindMergePoint_data()
         IntermediatesMap intermediates;
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
-        QTest::newRow("TwoClassesSameLevel") << "D" << "A" << intermediates << inheritanceMatrix << classes << "Null";
+        QTest::newRow("TwoClassesSameLevel") << "D" << "A" << intermediates << inheritanceMatrix << classes << "";
     }
 
     // Тест 2: ромб из трех классов
@@ -52,7 +52,7 @@ void TestFindMergePoint::testFindMergePoint_data()
         classes.insert("C", new Class("C", {"B", "A"}));
         IntermediatesMap intermediates;
         intermediates.insert(1, "B");
-        QTest::newRow("ThreeClassDiamond") << "C" << "A" << intermediates << inheritanceMatrix << classes << "Null";
+        QTest::newRow("ThreeClassDiamond") << "C" << "A" << intermediates << inheritanceMatrix << classes << "";
     }
 
     // Тест 3: полная связь bottom с каждым классом
@@ -71,7 +71,7 @@ void TestFindMergePoint::testFindMergePoint_data()
         IntermediatesMap intermediates;
         intermediates.insert(1, "B");
         intermediates.insert(1, "D");
-        QTest::newRow("FullConnectionToBottom") << "C" << "A" << intermediates << inheritanceMatrix << classes << "Null";
+        QTest::newRow("FullConnectionToBottom") << "C" << "A" << intermediates << inheritanceMatrix << classes << "";
     }
 
     // Тест 4: дополнительное наследование для одного из промежуточных классов
@@ -90,7 +90,7 @@ void TestFindMergePoint::testFindMergePoint_data()
         IntermediatesMap intermediates;
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
-        QTest::newRow("AdditionalInheritanceIntermediate") << "D" << "A" << intermediates << inheritanceMatrix << classes << "Null";
+        QTest::newRow("AdditionalInheritanceIntermediate") << "D" << "A" << intermediates << inheritanceMatrix << classes << "";
     }
 
     // Тест 5: точка слияния - прямой предок bottom
@@ -184,7 +184,7 @@ void TestFindMergePoint::testFindMergePoint_data()
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
         intermediates.insert(2, "A");
-        QTest::newRow("BypassPotentialMergePointDirectDescendantTop") << "D" << "X" << intermediates << inheritanceMatrix << classes << "Null";
+        QTest::newRow("BypassPotentialMergePointDirectDescendantTop") << "D" << "X" << intermediates << inheritanceMatrix << classes << "";
     }
 
     // Тест 9: обходной путь через потенциальную точку слияния для прямого предка bottom
@@ -206,7 +206,7 @@ void TestFindMergePoint::testFindMergePoint_data()
         intermediates.insert(1, "D");
         intermediates.insert(2, "B");
         intermediates.insert(2, "C");
-        QTest::newRow("BypassPotentialMergePointDirectAncestorBottom") << "E" << "A" << intermediates << inheritanceMatrix << classes << "Null";
+        QTest::newRow("BypassPotentialMergePointDirectAncestorBottom") << "E" << "A" << intermediates << inheritanceMatrix << classes << "";
     }
 
     // Тест 10: две точки слияния
@@ -306,7 +306,7 @@ void TestFindMergePoint::testFindMergePoint_data()
         intermediates.insert(2, "B");
         intermediates.insert(2, "C");
         intermediates.insert(3, "A");
-        QTest::newRow("BypassBothMergePointsSimultaneously") << "E" << "X" << intermediates << inheritanceMatrix << classes << "Null";
+        QTest::newRow("BypassBothMergePointsSimultaneously") << "E" << "X" << intermediates << inheritanceMatrix << classes << "";
     }
 
     // Тест 14: обход обеих точек слияния при помощи нескольких путей
@@ -331,7 +331,7 @@ void TestFindMergePoint::testFindMergePoint_data()
         intermediates.insert(2, "B");
         intermediates.insert(2, "C");
         intermediates.insert(1, "A");
-        QTest::newRow("BypassBothMergePointsMultiplePaths") << "E" << "X" << intermediates << inheritanceMatrix << classes << "Null";
+        QTest::newRow("BypassBothMergePointsMultiplePaths") << "E" << "X" << intermediates << inheritanceMatrix << classes << "";
     }
 
     // Тест 15: разная глубина наследования в одной из веток промежуточных классов
@@ -359,7 +359,7 @@ void TestFindMergePoint::testFindMergePoint_data()
         intermediates.insert(2, "F");
         intermediates.insert(3, "D");
         intermediates.insert(4, "B");
-        QTest::newRow("DifferentInheritanceDepthOneBranch") << "E" << "A" << intermediates << inheritanceMatrix << classes << "Null";
+        QTest::newRow("DifferentInheritanceDepthOneBranch") << "E" << "A" << intermediates << inheritanceMatrix << classes << "";
     }
 
     // Тест 16: разная глубина наследования с точкой слияния перед промежуточными классами
@@ -433,7 +433,7 @@ void TestFindMergePoint::testFindMergePoint_data()
         ClassMap classes;
         classes.insert("A", new Class("A"));
         classes.insert("B", new Class("B", {"A"}));
-        QTest::newRow("NoIntermediates") << "B" << "A" << IntermediatesMap() << inheritanceMatrix << classes << "Null";
+        QTest::newRow("NoIntermediates") << "B" << "A" << IntermediatesMap() << inheritanceMatrix << classes << "";
     }
 
     // Тест 19: только один класс intermediates
@@ -496,7 +496,7 @@ void TestFindMergePoint::testFindMergePoint_data()
         intermediates.insert(1, "D");
         intermediates.insert(2, "B");
         intermediates.insert(2, "C");
-        QTest::newRow("TwoConnectedDiamonds") << "F" << "A" << intermediates << inheritanceMatrix << classes << "Null";
+        QTest::newRow("TwoConnectedDiamonds") << "F" << "A" << intermediates << inheritanceMatrix << classes << "";
     }
 
     // Тест 22: цепочка точек слияния
@@ -591,7 +591,7 @@ void TestFindMergePoint::testFindMergePoint_data()
         intermediates.insert(3, "D");
         intermediates.insert(4, "C");
         intermediates.insert(4, "B");
-        QTest::newRow("ChainOfRelatedRhombuses") << "O" << "A" << intermediates << inheritanceMatrix << classes << "Null";
+        QTest::newRow("ChainOfRelatedRhombuses") << "O" << "A" << intermediates << inheritanceMatrix << classes << "";
     }
 }
 

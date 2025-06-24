@@ -34,8 +34,8 @@ void TestCollectOverridden::testCollectOverridden_data()
         };
 
         ClassMap classes;
-        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {})}));
-        classes.insert("B", new Class("B", {"A"}, {new Method("Void", "count", {})}));
+        classes.insert("A", new Class("A", {}, {new Method("void", "method", {})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("void", "count", {})}));
         classes.insert("C", new Class("C", {"A"}));
         classes.insert("D", new Class("D", {"B", "C"}));
 
@@ -44,7 +44,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("NoOverriddenMethods") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
+        QTest::newRow("NoOverriddenMethods") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
     }
 
     // Тест 2: переопределение есть только в классе bottom
@@ -57,17 +57,17 @@ void TestCollectOverridden::testCollectOverridden_data()
         };
 
         ClassMap classes;
-        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {})}));
-        classes.insert("B", new Class("B", {"A"}, {new Method("Void", "count", {})}));
+        classes.insert("A", new Class("A", {}, {new Method("void", "method", {})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("void", "count", {})}));
         classes.insert("C", new Class("C", {"A"}));
-        classes.insert("D", new Class("D", {"B", "C"}, {new Method("Void", "method", {})}));
+        classes.insert("D", new Class("D", {"B", "C"}, {new Method("void", "method", {})}));
 
         MethodMap expectedResult;
         IntermediatesMap intermediates;
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("OverriddenInBottomOnly") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
+        QTest::newRow("OverriddenInBottomOnly") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
     }
 
     // Тест 3: переопределение есть в одном из промежуточных классов
@@ -80,19 +80,19 @@ void TestCollectOverridden::testCollectOverridden_data()
         };
 
         ClassMap classes;
-        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {p1})}));
-        classes.insert("B", new Class("B", {"A"}, {new Method("Void", "method", {p1})}));
+        classes.insert("A", new Class("A", {}, {new Method("void", "method", {p1})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("void", "method", {p1})}));
         classes.insert("C", new Class("C", {"A"}));
         classes.insert("D", new Class("D", {"B", "C"}));
 
         MethodMap expectedResult;
-        expectedResult["B"] = {new Method("Void", "method", {p1})};
+        expectedResult["B"] = {new Method("void", "method", {p1})};
 
         IntermediatesMap intermediates;
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("OverriddenInOneIntermediate") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
+        QTest::newRow("OverriddenInOneIntermediate") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
     }
 
     // Тест 4: переопределение нескольких методов в одном классе
@@ -106,26 +106,26 @@ void TestCollectOverridden::testCollectOverridden_data()
 
         ClassMap classes;
         classes.insert("A", new Class("A", {}, {
-                                                   new Method("Void", "method1", {}),
-                                                   new Method("Void", "method2", {}),
-                                                   new Method("Void", "method3", {})
+                                                   new Method("void", "method1", {}),
+                                                   new Method("void", "method2", {}),
+                                                   new Method("void", "method3", {})
                                                }));
         classes.insert("B", new Class("B", {"A"}, {
-                                                      new Method("Void", "method1", {}),
-                                                      new Method("Void", "method3", {})
+                                                      new Method("void", "method1", {}),
+                                                      new Method("void", "method3", {})
                                                   }));
-        classes.insert("C", new Class("C", {"A"}, {new Method("Void", "method2", {})}));
+        classes.insert("C", new Class("C", {"A"}, {new Method("void", "method2", {})}));
         classes.insert("D", new Class("D", {"B", "C"}));
 
         MethodMap expectedResult;
-        expectedResult["B"] = {new Method("Void", "method1", {}), new Method("Void", "method3", {})};
-        expectedResult["C"] = {new Method("Void", "method2", {})};
+        expectedResult["B"] = {new Method("void", "method1", {}), new Method("void", "method3", {})};
+        expectedResult["C"] = {new Method("void", "method2", {})};
 
         IntermediatesMap intermediates;
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("MultipleMethodsOverriddenInOneClass") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
+        QTest::newRow("MultipleMethodsOverriddenInOneClass") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
     }
 
     // Тест 5: переопределение происходит и в промежуточном классе, и в bottom
@@ -140,19 +140,19 @@ void TestCollectOverridden::testCollectOverridden_data()
         Parameter pTest5("int", "a");
 
         ClassMap classes;
-        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {pTest5})}));
-        classes.insert("B", new Class("B", {"A"}, {new Method("Void", "method", {pTest5})}));
+        classes.insert("A", new Class("A", {}, {new Method("void", "method", {pTest5})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("void", "method", {pTest5})}));
         classes.insert("C", new Class("C", {"A"}));
-        classes.insert("D", new Class("D", {"B", "C"}, {new Method("Void", "method", {pTest5})}));
+        classes.insert("D", new Class("D", {"B", "C"}, {new Method("void", "method", {pTest5})}));
 
         MethodMap expectedResult;
-        expectedResult["B"] = {new Method("Void", "method", {pTest5})};
+        expectedResult["B"] = {new Method("void", "method", {pTest5})};
 
         IntermediatesMap intermediates;
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("OverriddenInIntermediateAndBottom") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
+        QTest::newRow("OverriddenInIntermediateAndBottom") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
     }
 
     // Тест 6: отсутствие intermediates
@@ -163,13 +163,13 @@ void TestCollectOverridden::testCollectOverridden_data()
         };
 
         ClassMap classes;
-        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {})}));
+        classes.insert("A", new Class("A", {}, {new Method("void", "method", {})}));
         classes.insert("D", new Class("D", {"A"}));
 
         MethodMap expectedResult;
         IntermediatesMap intermediates;
 
-        QTest::newRow("NoIntermediates") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
+        QTest::newRow("NoIntermediates") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
     }
 
     // Тест 7: переопределение в прямой цепи наследования (не в первой точке слияния)
@@ -182,9 +182,9 @@ void TestCollectOverridden::testCollectOverridden_data()
         };
 
         ClassMap classes;
-        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {})}));
-        classes.insert("B", new Class("B", {"A"}, {new Method("Void", "method", {})}));
-        classes.insert("C", new Class("C", {"B"}, {new Method("Void", "count", {})}));
+        classes.insert("A", new Class("A", {}, {new Method("void", "method", {})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("void", "method", {})}));
+        classes.insert("C", new Class("C", {"B"}, {new Method("void", "count", {})}));
         classes.insert("D", new Class("D", {"C"}));
 
         MethodMap expectedResult;
@@ -205,9 +205,9 @@ void TestCollectOverridden::testCollectOverridden_data()
         };
 
         ClassMap classes;
-        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {})}));
+        classes.insert("A", new Class("A", {}, {new Method("void", "method", {})}));
         classes.insert("B", new Class("B", {"A"}));
-        classes.insert("C", new Class("C", {"B"}, {new Method("Void", "method", {})}));
+        classes.insert("C", new Class("C", {"B"}, {new Method("void", "method", {})}));
         classes.insert("D", new Class("D", {"C"}));
 
         MethodMap expectedResult;
@@ -229,10 +229,10 @@ void TestCollectOverridden::testCollectOverridden_data()
         };
 
         ClassMap classes;
-        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {p1})}));
+        classes.insert("A", new Class("A", {}, {new Method("void", "method", {p1})}));
         classes.insert("B", new Class("B", {"A"}));
-        classes.insert("C", new Class("C", {"A"}, {new Method("Void", "count", {p1})}));
-        classes.insert("D", new Class("D", {"B", "C"}, {new Method("Void", "method", {p1})}));
+        classes.insert("C", new Class("C", {"A"}, {new Method("void", "count", {p1})}));
+        classes.insert("D", new Class("D", {"B", "C"}, {new Method("void", "method", {p1})}));
         classes.insert("E", new Class("E", {"D"}));
 
         MethodMap expectedResult;
@@ -255,9 +255,9 @@ void TestCollectOverridden::testCollectOverridden_data()
         };
 
         ClassMap classes;
-        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {})}));
+        classes.insert("A", new Class("A", {}, {new Method("void", "method", {})}));
         classes.insert("B", new Class("B", {"A"}));
-        classes.insert("C", new Class("C", {"A"}, {new Method("Void", "method", {})}));
+        classes.insert("C", new Class("C", {"A"}, {new Method("void", "method", {})}));
         classes.insert("D", new Class("D", {"B", "C"}));
         classes.insert("E", new Class("E", {"D"}));
 
@@ -283,8 +283,8 @@ void TestCollectOverridden::testCollectOverridden_data()
         Parameter pTest11("QString", "a");
 
         ClassMap classes;
-        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {pTest11})}));
-        classes.insert("B", new Class("B", {"A"}, {new Method("Void", "method", {pTest11})}));
+        classes.insert("A", new Class("A", {}, {new Method("void", "method", {pTest11})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("void", "method", {pTest11})}));
         classes.insert("C", new Class("C", {"B"}));
         classes.insert("D", new Class("D", {"B"}));
         classes.insert("E", new Class("E", {"C", "D"}));
@@ -313,14 +313,14 @@ void TestCollectOverridden::testCollectOverridden_data()
         Parameter pTest12ForD2("int", "b");
 
         ClassMap classes;
-        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {pTest12})}));
+        classes.insert("A", new Class("A", {}, {new Method("void", "method", {pTest12})}));
         classes.insert("B", new Class("B", {"A"}));
-        classes.insert("C", new Class("C", {"B"}, {new Method("Void", "method", {pTest12})}));
+        classes.insert("C", new Class("C", {"B"}, {new Method("void", "method", {pTest12})}));
         classes.insert("D", new Class("D", {"B"}, {new Method("int", "count", {pTest12ForD1, pTest12ForD2})}));
         classes.insert("E", new Class("E", {"C", "D"}));
 
         MethodMap expectedResult;
-        expectedResult["C"] = {new Method("Void", "method", {pTest12})};
+        expectedResult["C"] = {new Method("void", "method", {pTest12})};
 
         IntermediatesMap intermediates;
         intermediates.insert(1, "C");
@@ -347,11 +347,11 @@ void TestCollectOverridden::testCollectOverridden_data()
 
 
         ClassMap classes;
-        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {})}));
-        classes.insert("B", new Class("B", {"A"}, {new Method("Void", "method", {})}));
+        classes.insert("A", new Class("A", {}, {new Method("void", "method", {})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("void", "method", {})}));
         classes.insert("C", new Class("C", {"B"}, {new Method("QString", "sum", {pTest13ForC1, pTest13For2})}));
         classes.insert("D", new Class("D", {"B"}, {new Method("int", "count", {pTest13ForD1, pTest13For2})}));
-        classes.insert("E", new Class("E", {"C", "D"}, {new Method("Void", "method", {})}));
+        classes.insert("E", new Class("E", {"C", "D"}, {new Method("void", "method", {})}));
         classes.insert("F", new Class("F", {"E"}));
 
         MethodMap expectedResult;
@@ -380,17 +380,17 @@ void TestCollectOverridden::testCollectOverridden_data()
         Parameter pTest14("float", "a");
 
         ClassMap classes;
-        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {pTest14})}));
+        classes.insert("A", new Class("A", {}, {new Method("void", "method", {pTest14})}));
         classes.insert("B", new Class("B", {"A"}));
-        classes.insert("C", new Class("C", {"B"}, {new Method("Void", "method", {pTest14})}));
+        classes.insert("C", new Class("C", {"B"}, {new Method("void", "method", {pTest14})}));
         classes.insert("D", new Class("D", {"B"}));
         classes.insert("E", new Class("E", {"C", "D"}));
         classes.insert("G", new Class("G", {"E"}));
-        classes.insert("H", new Class("H", {"E"}, {new Method("Void", "method", {pTest14})}));
+        classes.insert("H", new Class("H", {"E"}, {new Method("void", "method", {pTest14})}));
         classes.insert("F", new Class("F", {"H", "G"}));
 
         MethodMap expectedResult;
-        expectedResult["H"] = {new Method("Void", "method", {pTest14})};
+        expectedResult["H"] = {new Method("void", "method", {pTest14})};
 
         IntermediatesMap intermediates;
         intermediates.insert(1, "H");
@@ -422,17 +422,17 @@ void TestCollectOverridden::testCollectOverridden_data()
         Parameter pTest15ForH2("int", "b");
 
         ClassMap classes;
-        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {pTest15})}));
+        classes.insert("A", new Class("A", {}, {new Method("void", "method", {pTest15})}));
         classes.insert("B", new Class("B", {"A"}));
-        classes.insert("C", new Class("C", {"B"}, {new Method("Void", "count", {pTest15})}));
+        classes.insert("C", new Class("C", {"B"}, {new Method("void", "count", {pTest15})}));
         classes.insert("D", new Class("D", {"B"}));
-        classes.insert("E", new Class("E", {"C", "D"}, {new Method("Void", "method", {pTest15})}));
+        classes.insert("E", new Class("E", {"C", "D"}, {new Method("void", "method", {pTest15})}));
         classes.insert("G", new Class("G", {"E"}));
-        classes.insert("H", new Class("H", {"E"}, {new Method("Void", "findMax", {pTest15ForH1, pTest15ForH2})}));
+        classes.insert("H", new Class("H", {"E"}, {new Method("void", "findMax", {pTest15ForH1, pTest15ForH2})}));
         classes.insert("F", new Class("F", {"B", "H", "G"}));
 
         MethodMap expectedResult;
-        expectedResult["E"] = {new Method("Void", "method", {pTest15})};
+        expectedResult["E"] = {new Method("void", "method", {pTest15})};
 
         IntermediatesMap intermediates;
         intermediates.insert(1, "H");
@@ -464,18 +464,18 @@ void TestCollectOverridden::testCollectOverridden_data()
         Parameter pTest16ForE2("int", "b");
 
         ClassMap classes;
-        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {pTest16})}));
+        classes.insert("A", new Class("A", {}, {new Method("void", "method", {pTest16})}));
         classes.insert("B", new Class("B", {"A"}));
-        classes.insert("C", new Class("C", {"B"}, {new Method("Void", "method", {pTest16})}));
+        classes.insert("C", new Class("C", {"B"}, {new Method("void", "method", {pTest16})}));
         classes.insert("D", new Class("D", {"B"}));
-        classes.insert("E", new Class("E", {"C", "D"}, {new Method("Void", "findMax", {pTest16ForE1, pTest16ForE2})}));
+        classes.insert("E", new Class("E", {"C", "D"}, {new Method("void", "findMax", {pTest16ForE1, pTest16ForE2})}));
         classes.insert("G", new Class("G", {"E"}));
-        classes.insert("H", new Class("H", {"E"}, {new Method("Void", "method", {pTest16})}));
+        classes.insert("H", new Class("H", {"E"}, {new Method("void", "method", {pTest16})}));
         classes.insert("F", new Class("F", {"B", "H", "G"}));
 
         MethodMap expectedResult;
-        expectedResult["C"] = {new Method("Void", "method", {pTest16})};
-        expectedResult["H"] = {new Method("Void", "method", {pTest16})};
+        expectedResult["C"] = {new Method("void", "method", {pTest16})};
+        expectedResult["H"] = {new Method("void", "method", {pTest16})};
 
         IntermediatesMap intermediates;
         intermediates.insert(1, "H");
@@ -506,15 +506,15 @@ void TestCollectOverridden::testCollectOverridden_data()
 
 
         ClassMap classes;
-        classes.insert("A", new Class("A", {}, {new Method("Void", "method", {pTest17})}));
-        classes.insert("B", new Class("B", {"A"}, {new Method("Void", "count", {pTest17For1})}));
-        classes.insert("C", new Class("C", {"A"}, {new Method("Void", "method", {pTest17})}));
+        classes.insert("A", new Class("A", {}, {new Method("void", "method", {pTest17})}));
+        classes.insert("B", new Class("B", {"A"}, {new Method("void", "count", {pTest17For1})}));
+        classes.insert("C", new Class("C", {"A"}, {new Method("void", "method", {pTest17})}));
         classes.insert("D", new Class("D", {"B"}));
-        classes.insert("E", new Class("E", {"B", "C"}, {new Method("Void", "findMax", {pTest17For1, pTest17ForE2})}));
+        classes.insert("E", new Class("E", {"B", "C"}, {new Method("void", "findMax", {pTest17For1, pTest17ForE2})}));
         classes.insert("F", new Class("F", {"D", "E"}));
 
         MethodMap expectedResult;
-        expectedResult["C"] = {new Method("Void", "method", {pTest17})};
+        expectedResult["C"] = {new Method("void", "method", {pTest17})};
 
         IntermediatesMap intermediates;
         intermediates.insert(1, "D");
@@ -522,7 +522,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(2, "B");
         intermediates.insert(2, "C");
 
-        QTest::newRow("OverriddenInOneOfTwoLinkedRhombuses") << inheritanceMatrix << classes << "F" << "A" << "Null" << intermediates << expectedResult;
+        QTest::newRow("OverriddenInOneOfTwoLinkedRhombuses") << inheritanceMatrix << classes << "F" << "A" << "" << intermediates << expectedResult;
     }
 
     // Тест 18: переопределение различных методов в нескольких промежуточных классах
@@ -549,14 +549,14 @@ void TestCollectOverridden::testCollectOverridden_data()
         ClassMap classes;
         classes.insert("A", new Class("A", {}, {
                                                    new Method("int", "count", {pTest18Count}),
-                                                   new Method("Void", "method", {}),
+                                                   new Method("void", "method", {}),
                                                    new Method("QList", "init", {pTest18Init})
                                                }));
         classes.insert("B", new Class("B", {"A"}));
-        classes.insert("C", new Class("C", {"A"}, {new Method("Void", "method", {})}));
+        classes.insert("C", new Class("C", {"A"}, {new Method("void", "method", {})}));
         classes.insert("D", new Class("D", {"B"}, {new Method("int", "count", {pTest18Count})}));
         classes.insert("E", new Class("E", {"B", "C"}, {new Method("void", "findMax", {pTest18For1, pTest18ForE2})}));
-        classes.insert("G", new Class("G", {"I"}, {new Method("Void", "remove", {pTest18For1})}));
+        classes.insert("G", new Class("G", {"I"}, {new Method("void", "remove", {pTest18For1})}));
         classes.insert("H", new Class("H", {"I"}));
         classes.insert("I", new Class("I", {"A"}));
         classes.insert("K", new Class("K", {"A"}, {new Method("QList", "init", {pTest18Init})}));
@@ -564,7 +564,7 @@ void TestCollectOverridden::testCollectOverridden_data()
 
         MethodMap expectedResult;
         expectedResult["D"] = {new Method("int", "count", {pTest18Count})};
-        expectedResult["C"] = {new Method("Void", "method", {})};
+        expectedResult["C"] = {new Method("void", "method", {})};
         expectedResult["K"] = {new Method("QList", "init", {pTest18Init})};
 
         IntermediatesMap intermediates;
@@ -577,7 +577,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(2, "C");
         intermediates.insert(2, "I");
 
-        QTest::newRow("MultipleMethodsInMultipleIntermediates") << inheritanceMatrix << classes << "F" << "A" << "Null" << intermediates << expectedResult;
+        QTest::newRow("MultipleMethodsInMultipleIntermediates") << inheritanceMatrix << classes << "F" << "A" << "" << intermediates << expectedResult;
     }
 
     // Тест 19: перегрузка метода top по типу данных параметра
@@ -602,7 +602,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("OverloadByParameterDataType") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
+        QTest::newRow("OverloadByParameterDataType") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
     }
 
 
@@ -628,7 +628,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("OverloadByParameterCounter") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
+        QTest::newRow("OverloadByParameterCounter") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
     }
 
     // Тест 21: переопределение метода top по константному параметру
@@ -656,7 +656,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("OverrideByConstParameter") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
+        QTest::newRow("OverrideByConstParameter") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
     }
 
     // Тест 22: перегрузка методов top по указателям и ссылкам
@@ -683,7 +683,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("OverloadByPointersAndReferences") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
+        QTest::newRow("OverloadByPointersAndReferences") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
     }
 
     // Тест 23: переопределение методов top по указателям и ссылкам
@@ -713,7 +713,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("OverrideByPointerdAndeReferences") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
+        QTest::newRow("OverrideByPointerdAndeReferences") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
     }
 
     // Тест 24: перегрузка методов top по константным указателям и ссылкам
@@ -741,7 +741,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("OverloadByConstPointersAndReferences") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
+        QTest::newRow("OverloadByConstPointersAndReferences") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
     }
 
     // Тест 25: переопределение метода top с параметром в виде одномерного массива
@@ -770,7 +770,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("OverrideByOneDimensionalArray") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
+        QTest::newRow("OverrideByOneDimensionalArray") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
     }
 
     // Тест 26: перегрузки по применению const к указателю или типу
@@ -797,7 +797,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(1, "B");
         intermediates.insert(1, "C");
 
-        QTest::newRow("OverloadByMultiConst") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
+        QTest::newRow("OverloadByMultiConst") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
     }
 
     // Тест 27: переопределение методов с параметрами в виде многомерного массива
@@ -845,7 +845,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(1, "F");
         intermediates.insert(1, "G");
 
-        QTest::newRow("OverriddenMethodsWithMultiDimensionalArrays") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
+        QTest::newRow("OverriddenMethodsWithMultiDimensionalArrays") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
     }
 
     // Тест 28 - переопределение метода top по константным параметрам
@@ -892,7 +892,7 @@ void TestCollectOverridden::testCollectOverridden_data()
         intermediates.insert(1, "F");
         intermediates.insert(1, "G");
 
-        QTest::newRow("OverriddenByDifferentTypesOfConsts") << inheritanceMatrix << classes << "D" << "A" << "Null" << intermediates << expectedResult;
+        QTest::newRow("OverriddenByDifferentTypesOfConsts") << inheritanceMatrix << classes << "D" << "A" << "" << intermediates << expectedResult;
     }
 
 
