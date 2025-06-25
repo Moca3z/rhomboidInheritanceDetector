@@ -5,7 +5,7 @@
 #include "collectoverriddenmethods.h"
 #include "rhombus.h"
 
-QMap<QString, QList<Method*>> collectOverriddenMethods(
+QMap<QString, QSet<Method*>> collectOverriddenMethods(
     QString bottom,
     QString top,
     QString mergePoint,
@@ -13,7 +13,7 @@ QMap<QString, QList<Method*>> collectOverriddenMethods(
     QMap<QString, Class*> classes,
     QMap<QString, QSet<QString>> inheritanceMatrix
     ) {
-    QMap<QString, QList<Method*>> overriddenMethods;
+    QMap<QString, QSet<Method*>> overriddenMethods;
     QList<QString> ancestorsBeforeMergePoint;
 
     Class* topClass = classes[top];
@@ -58,7 +58,7 @@ QMap<QString, QList<Method*>> collectOverriddenMethods(
                             }
                             // Если все параметры совпадают, это переопределение
                             if (parametersMatch) {
-                                overriddenMethods[candidate].append(candidateMethod);
+                                overriddenMethods[candidate].insert(candidateMethod);
                             }
                         }
                     }

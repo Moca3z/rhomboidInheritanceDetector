@@ -26,11 +26,11 @@ struct Rhombus {
     QString bottom;
     QString top;
     QMultiMap<int, QString> intermediates;
-    QMap<QString, QList<Method*>> overriddenMethods;
+    QMap<QString, QSet<Method*>> overriddenMethods;
 
     Rhombus(const QString& b = QString(), const QString& t = QString(),
             const QMultiMap<int, QString>& i = QMultiMap<int, QString>(),
-            const QMap<QString, QList<Method*>>& m = QMap<QString, QList<Method*>>())
+            const QMap<QString, QSet<Method*>>& m = QMap<QString, QSet<Method*>>())
         : bottom(b), top(t), intermediates(i), overriddenMethods(m) {}
 
     /*!
@@ -73,58 +73,35 @@ struct Rhombus {
         }
 
         // 4. Поэлементное сравнение методов
-        auto it1 = overriddenMethods.constBegin();
-        auto it2 = other.overriddenMethods.constBegin();
+        if (overriddenMethods.size() != other.overriddenMethods.size()) {
+            return false;
+        }
 
-        while (it1 != overriddenMethods.constEnd()) {
-            // 4.1. Проверка имени класса
-            if (it1.key() != it2.key()) {
+        for (auto it = overriddenMethods.constBegin(); it != overriddenMethods.constEnd(); ++it) {
+            const QString& className = it.key();
+            if (!other.overriddenMethods.contains(className)) {
                 return false;
             }
 
-            // 4.2. Проверка количества методов
-            const QList<Method*>& methods1 = it1.value();
-            const QList<Method*>& methods2 = it2.value();
+            const QSet<Method*>& methods1 = it.value();
+            const QSet<Method*>& methods2 = other.overriddenMethods[className];
 
             if (methods1.size() != methods2.size()) {
                 return false;
             }
 
-            // 4.3. Проверка каждого метода
-            for (int i = 0; i < methods1.size(); ++i) {
-                const Method* m1 = methods1[i];
-                const Method* m2 = methods2[i];
-
-                if (m1->methodName != m2->methodName ||
-                    m1->isVirtual != m2->isVirtual ||
-                    m1->returnType != m2->returnType ||
-                    m1->parameters.size() != m2->parameters.size()) {
-                    return false;
-                }
-
-                // 4.4. Проверка параметров методов
-                for (int j = 0; j < m1->parameters.size(); ++j) {
-                    const Parameter& p1 = m1->parameters[j];
-                    const Parameter& p2 = m2->parameters[j];
-
-                    if (p1.type != p2.type ||
-                        p1.name != p2.name ||
-                        p1.isTypeConst != p2.isTypeConst ||
-                        p1.isPointerConst != p2.isPointerConst ||
-                        p1.isReference != p2.isReference ||
-                        p1.isPointer != p2.isPointer ||
-                        p1.isArray != p2.isArray ||
-                        p1.isPointerToArray != p2.isPointerToArray ||
-                        p1.arrayDimensions != p2.arrayDimensions) {
-                        return false;
+            // Сравнение содержимого множеств
+            for (Method* m1 : methods1) {
+                bool found = false;
+                for (Method* m2 : methods2) {
+                    if (*m1 == *m2) {  // Требуется operator== для Method
+                        found = true;
+                        break;
                     }
                 }
+                if (!found) return false;
             }
-
-            ++it1;
-            ++it2;
         }
-
         return true;
     }
 };

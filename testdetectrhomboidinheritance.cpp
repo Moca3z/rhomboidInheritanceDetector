@@ -339,7 +339,7 @@ void TestDetectRhomboid::testDetectRhomboidInheritance_data()
         classes.insert("D", new Class("D", {"B", "C", "F"}));
         classes.insert("E", new Class("E", {"D", "G", "H"}, {new Method("void", "methodA")}));
 
-        QMap<QString, QList<Method*>> overriddenMethods;
+        QMap<QString, QSet<Method*>> overriddenMethods;
         overriddenMethods["B"] = {new Method("int", "method1", {p1, p2})};
 
         QSet<Rhombus> expected = {Rhombus("D", "A", {{1, "B"}, {1, "C"}, {1, "F"}}, overriddenMethods)};

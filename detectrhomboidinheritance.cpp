@@ -27,7 +27,7 @@ QSet<Rhombus> detectRhomboidInheritance(const QMap<QString, Class*>& classes)
                 QString mergePoint = findMergePoint(bottom, top, intermediates, inheritanceMatrix, classes);
 
                 // Шаг 3.3: Проверить наличие переопределенных методов
-                QMap<QString, QList<Method*>> overriddenMethods = collectOverriddenMethods(bottom, top, mergePoint, intermediates, classes, inheritanceMatrix);
+                QMap<QString, QSet<Method*>> overriddenMethods = collectOverriddenMethods(bottom, top, mergePoint, intermediates, classes, inheritanceMatrix);
 
                 // Шаг 3.4: Если есть переопределенные методы, создать объект Rhombus
                 if (!overriddenMethods.isEmpty()) {

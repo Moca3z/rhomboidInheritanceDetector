@@ -34,7 +34,37 @@ struct Parameter {
         : type(t), name(n), isTypeConst(typeConst), isPointerConst(ptrConst),
         isReference(ref), isPointer(ptr), isArray(arr),
         isPointerToArray(ptrToArr), arrayDimensions(dims) {}
+
+    bool operator==(const Parameter& other) const {
+        return type == other.type &&
+               isTypeConst == other.isTypeConst &&
+               isPointerConst == other.isPointerConst &&
+               isReference == other.isReference &&
+               isPointer == other.isPointer &&
+               isArray == other.isArray &&
+               isPointerToArray == other.isPointerToArray &&
+               arrayDimensions == other.arrayDimensions;
+    }
 };
+
+/*!
+ * \brief Функция хеширования для Parameters
+ */
+inline uint qHash(const Parameter& param, uint seed = 0) noexcept {
+    QtPrivate::QHashCombine hash;
+    seed = hash(seed, param.type);
+    seed = hash(seed, param.isTypeConst);
+    seed = hash(seed, param.isPointerConst);
+    seed = hash(seed, param.isReference);
+    seed = hash(seed, param.isPointer);
+    seed = hash(seed, param.isArray);
+    seed = hash(seed, param.isPointerToArray);
+    for (int dim : param.arrayDimensions) {
+        seed = hash(seed, dim);
+    }
+    return seed;
+}
+
 
 /*!
  * \brief Структура метода
@@ -52,7 +82,28 @@ struct Method {
            const QList<Parameter>& params = {}, bool virt = false)
         : isVirtual(virt), returnType(rt), methodName(mn), parameters(params) {}
 
+    bool operator==(const Method& other) const {
+        return isVirtual == other.isVirtual &&
+               returnType == other.returnType &&
+               methodName == other.methodName &&
+               parameters == other.parameters;
+    }
+
 };
+
+/*!
+ * \brief Функция хеширования для Method
+ */
+inline uint qHash(const Method& method, uint seed = 0) noexcept {
+    QtPrivate::QHashCombine hash;
+    seed = hash(seed, method.isVirtual);
+    seed = hash(seed, method.returnType);
+    seed = hash(seed, method.methodName);
+    for (const Parameter& param : method.parameters) {
+        seed = hash(seed, qHash(param));
+    }
+    return seed;
+}
 
 /*!
  * \brief Класс для хранения информации о классе.
@@ -61,7 +112,7 @@ class Class {
 public:
     QString className;
     QList<QString> directAncestors;
-    QList<Method*> methods;
+    QSet<Method*> methods;
 
 
     /*!
@@ -69,7 +120,7 @@ public:
     */
     Class(const QString& name = QString(),
           const QStringList& ancestors = {},
-          const QList<Method*>& m = {})
+          const QSet<Method*>& m = {})
         : className(name), directAncestors(ancestors), methods(m) {}
 
     /*!
@@ -83,5 +134,7 @@ public:
 
 
 };
+
+
 
 #endif // CLASS_H

@@ -42,7 +42,7 @@ ClassDiagram::ClassDiagram(const Rhombus& rhombus, const QMap<QString, Class*>& 
         // Добавляем переопределенные методы
         if (rhombus.overriddenMethods.contains(className)) {
             for (Method* method : rhombus.overriddenMethods[className]) {
-                cls->methods.append(new Method(*method));
+                cls->methods.insert(new Method(*method));
             }
         }
 
@@ -62,7 +62,7 @@ ClassDiagram::ClassDiagram(const Rhombus& rhombus, const QMap<QString, Class*>& 
 
     if (rhombus.overriddenMethods.contains(rhombus.bottom)) {
         for (Method* method : rhombus.overriddenMethods[rhombus.bottom]) {
-            bottomClass->methods.append(new Method(*method));
+            bottomClass->methods.insert(new Method(*method));
         }
     }
     classes.insert(rhombus.bottom, bottomClass);
@@ -70,7 +70,7 @@ ClassDiagram::ClassDiagram(const Rhombus& rhombus, const QMap<QString, Class*>& 
     // 4. Добавляем вершину ромба (top) с собранными методами
     Class* topClass = new Class(rhombus.top);
     for (Method* method : allOverriddenMethods) {
-        topClass->methods.append(new Method(*method));
+        topClass->methods.insert(new Method(*method));
     }
     classes.insert(rhombus.top, topClass);
 }

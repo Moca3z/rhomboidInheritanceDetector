@@ -274,7 +274,7 @@ QPair<QMap<QString, Class*>, QList<Error>> parseXmlFile(const QString& filename)
                 method->parameters = parseParameters(paramsStr);
             }
 
-            cls->methods.append(method);
+            cls->methods.insert(method);
         }
 
         classes[cls->className] = cls;

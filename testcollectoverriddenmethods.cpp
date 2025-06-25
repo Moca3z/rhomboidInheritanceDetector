@@ -8,7 +8,7 @@
 
 using InheritanceMatrix = QMap<QString, QSet<QString>>;
 using ClassMap = QMap<QString, Class*>;
-using MethodMap = QMap<QString, QList<Method*>>;
+using MethodMap = QMap<QString, QSet<Method*>>;
 using IntermediatesMap = QMultiMap<int, QString>;
 
 void TestCollectOverridden::testCollectOverridden_data()
@@ -912,14 +912,14 @@ void TestCollectOverridden::testCollectOverridden()
     MethodMap result = collectOverriddenMethods(bottomClass, topClass, mergePoint, intermediates, classes, inheritanceMatrix);
     bool hasErrors = false;
 
-    // Проверка размера результата
+    // 1.Проверка размера результата
     if (result.size() != expectedResult.size()) {
         qDebug() << "ОШИБКА: Несоответствие количества ключей";
         qDebug() << "Ожидалось:" << expectedResult.size() << "Получено:" << result.size();
         hasErrors = true;
     }
 
-    // Проверка наличия ожидаемых ключей
+    // 2.Проверка наличия ожидаемых ключей
     for (const QString& key : expectedResult.keys()) {
         if (!result.contains(key)) {
             qDebug() << "ОШИБКА: Отсутствует ожидаемый ключ:" << key;
@@ -927,7 +927,7 @@ void TestCollectOverridden::testCollectOverridden()
         }
     }
 
-    // Проверка лишних ключей
+    // 3.Проверка лишних ключей
     for (const QString& key : result.keys()) {
         if (!expectedResult.contains(key)) {
             qDebug() << "ОШИБКА: Найден лишний ключ:" << key;
@@ -935,37 +935,58 @@ void TestCollectOverridden::testCollectOverridden()
         }
     }
 
-    // Проверка методов для каждого ключа
+    // 4. Находим пересечение ключей (общие для expected и result)
+    QSet<QString> commonKeys;
     for (const QString& key : expectedResult.keys()) {
-        if (!result.contains(key)) continue;
+        if (result.contains(key)) {
+            commonKeys.insert(key);
+        }
+    }
 
-        if (result[key].size() != expectedResult[key].size()) {
-            qDebug() << "ОШИБКА: Для ключа" << key << "несоответствие количества методов";
-            qDebug() << "Ожидалось:" << expectedResult[key].size() << "Получено:" << result[key].size();
-            hasErrors = true;
-            continue;
+    // 5. Проверка методов для общих ключей
+    for (const QString& key : commonKeys) {
+        const QSet<Method*>& expectedMethodsPtr = expectedResult[key];
+        const QSet<Method*>& actualMethodsPtr = result[key];
+
+        // Создаем временные QSet из объектов (не указателей)
+        QSet<Method> expectedMethods;
+        QSet<Method> actualMethods;
+
+        // Заполняем временные множества
+        for (Method* methodPtr : expectedMethodsPtr) {
+            expectedMethods.insert(*methodPtr);
+        }
+        for (Method* methodPtr : actualMethodsPtr) {
+            actualMethods.insert(*methodPtr);
         }
 
-        for (int i = 0; i < expectedResult[key].size(); ++i) {
-            const Method* expectedMethod = expectedResult[key][i];
-            const Method* actualMethod = result[key][i];
+        // 5.1. Проверка количества методов
+        if (actualMethods.size() != expectedMethods.size()) {
+            qDebug() << "ОШИБКА: Для ключа" << key << "несоответствие количества методов";
+            qDebug() << "Ожидалось:" << expectedMethods.size() << "Получено:" << actualMethods.size();
+            hasErrors = true;
+        }
 
-            // Проверка имени метода
-            if (actualMethod->methodName != expectedMethod->methodName) {
-                qDebug() << "ОШИБКА: Для ключа" << key << "несоответствие имени метода";
-                qDebug() << "Ожидалось:" << expectedMethod->methodName
-                         << "Получено:" << actualMethod->methodName;
-                hasErrors = true;
-            }
+        // 5.2. Находим разницы между множествами методов
+        QSet<Method> extraInActual = actualMethods - expectedMethods;
+        QSet<Method> missingInActual = expectedMethods - actualMethods;
 
-            // Проверка типа возвращаемого значения
-            if (actualMethod->returnType != expectedMethod->returnType) {
-                qDebug() << "ОШИБКА: Для метода" << key << "::" << expectedMethod->methodName
-                         << "несоответствие типа возвращаемого значения";
-                qDebug() << "Ожидалось:" << expectedMethod->returnType
-                         << "Получено:" << actualMethod->returnType;
-                hasErrors = true;
+        // 5.3. Отчет о лишних методах
+        if (!extraInActual.isEmpty()) {
+            qDebug() << "ОШИБКА: Для ключа" << key << "найдены лишние методы:";
+            for (const Method& method : extraInActual) {
+                qDebug() << "  -" << method.methodName << "возвращает:" << method.returnType;
             }
+            hasErrors = true;
+        }
+
+        // 5.4. Отчет о пропущенных методах
+        if (!missingInActual.isEmpty()) {
+            qDebug() << "ОШИБКА: Для ключа" << key << "пропущены методы:";
+            for (const Method& method : missingInActual) {
+                qDebug() << "  -" << method.methodName << "возвращает:" << method.returnType;
+            }
+            hasErrors = true;
         }
     }
 

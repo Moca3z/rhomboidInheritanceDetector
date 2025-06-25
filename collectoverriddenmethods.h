@@ -21,7 +21,7 @@
  * \param [in] inheritanceMatrix - матрица наследования, хранящая информацию о всех предках для каждого класса
  * \return набор классов, в которых были переопределены методы класса top
  */
-QMap<QString, QList<Method*>> collectOverriddenMethods(
+QMap<QString, QSet<Method*>> collectOverriddenMethods(
     QString bottom,
     QString top,
     QString mergePoint,
