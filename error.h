@@ -18,7 +18,7 @@ public:
     enum ErrorType {
         NoError, FileNotFound, NoRootTag, MissingClassName, MissingAncestors,
         MissingVirtual, InvalidVirtual, MissingReturnType, MissingMethodName,
-        MissingParameters, InvalidParameters
+        MissingParameters, InvalidParameters, CyclicInheritance, DuplicateClassName
     };
     ErrorType type;
     QString className;
@@ -39,6 +39,8 @@ public:
         case MissingMethodName: return QString("В одном из методов класса %1 отсутствует атрибут methodName.").arg(className);
         case MissingParameters: return QString("В методе %1 класса %2 отсутствует атрибут parameters.").arg(methodName, className);
         case InvalidParameters: return QString("В методе %1 класса %2 атрибут parameters имеет некорректные входные данные.").arg(methodName, className);
+        case CyclicInheritance: return QString("Обнаружено циклическое наследование для класса %1.").arg(className);
+        case DuplicateClassName: return QString("Класс с именем %1 объявлен более одного раза.").arg(className);
         default: return "Неизвестная ошибка";
         }
     }

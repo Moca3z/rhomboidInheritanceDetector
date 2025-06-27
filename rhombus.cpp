@@ -216,6 +216,12 @@ QPair<QMap<QString, Class*>, QList<Error>> parseXmlFile(const QString& filename)
             continue;
         }
 
+        // Проверка на дубликаты классов
+        if (classes.contains(className)) {
+            errors.append({Error::DuplicateClassName, className, ""});
+            continue;
+        }
+
         if (!classElem.hasAttribute("ancestors")) {
             errors.append({Error::MissingAncestors, className, ""});
             continue;
@@ -278,6 +284,38 @@ QPair<QMap<QString, Class*>, QList<Error>> parseXmlFile(const QString& filename)
         }
 
         classes[cls->className] = cls;
+    }
+
+    // 6. Проверка на циклическое наследование
+    QMap<QString, int> inDegree; // количество предков
+    QQueue<QString> queue;
+
+    // Инициализация
+    for (Class* cls : classes) {
+        inDegree[cls->className] = cls->directAncestors.size();
+        if (inDegree[cls->className] == 0) {
+            queue.enqueue(cls->className);
+        }
+    }
+
+    // Топологическая сортировка
+    while (!queue.isEmpty()) {
+        QString className = queue.dequeue();
+        for (Class* cls : classes) {
+            if (cls->directAncestors.contains(className)) {
+                inDegree[cls->className]--;
+                if (inDegree[cls->className] == 0) {
+                    queue.enqueue(cls->className);
+                }
+            }
+        }
+    }
+
+    // Поиск циклов
+    for (Class* cls : classes) {
+        if (inDegree[cls->className] > 0) {
+            errors.append({Error::CyclicInheritance, cls->className, ""});
+        }
     }
 
     return {classes, errors};
